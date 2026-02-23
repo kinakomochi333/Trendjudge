@@ -69,6 +69,13 @@
   .key-status { font-family: var(--mono); font-size: 11px; white-space: nowrap; }
   .key-status.ok { color: var(--buy); }
   .key-status.ng { color: var(--sell); }
+  .bookmark-hint {
+    display: none; margin-bottom: 12px; padding: 10px 14px;
+    background: #001a0d; border: 1px solid var(--buy); border-radius: 6px;
+    font-size: 11px; line-height: 1.6;
+  }
+  .bookmark-hint .hint-title { color: var(--buy); font-weight: 700; letter-spacing: 1px; margin-bottom: 4px; }
+  .bookmark-hint .hint-url { font-family: var(--mono); font-size: 10px; color: var(--dim); word-break: break-all; }
 
   /* HEADER */
   .header {
@@ -86,7 +93,32 @@
     user-select: none; transition: all 0.15s;
   }
   .tf-badge:hover { background: #2a3a5a; }
-  .tf-badge.h4 { background: #2a1a4a; border-color: #9a6aff; color: #c09aff; }
+  .tf-badge.h4  { background: #2a1a4a; border-color: #9a6aff; color: #c09aff; }
+  .tf-badge.mtf { background: #1a2a1a; border-color: var(--buy); color: var(--buy); letter-spacing: 2px; }
+
+  /* MTF dual chip rows */
+  .mtf-chips { display: flex; flex-direction: column; gap: 4px; }
+  .mtf-row-label { font-family: var(--mono); font-size: 9px; color: var(--dim); letter-spacing: 1px; margin-right: 4px; }
+  .mtf-row { display: flex; align-items: center; gap: 4px; }
+
+  /* MTF detail grid - 2 columns for H1/H4 */
+  .detail-tf-header {
+    font-size: 10px; letter-spacing: 3px; color: var(--dim); text-transform: uppercase;
+    padding: 4px 0 6px; margin-bottom: 4px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .detail-tf-header .tf-pill {
+    font-family: var(--mono); font-size: 10px; padding: 2px 7px; border-radius: 3px;
+    background: #1a2a4a; border: 1px solid #3a6af0; color: #6a9aff;
+  }
+  .detail-tf-header .tf-pill.h4 { background: #2a1a4a; border-color: #9a6aff; color: #c09aff; }
+  .mtf-verdict-agree {
+    font-family: var(--mono); font-size: 11px; font-weight: 700;
+    padding: 4px 12px; border-radius: 4px; text-align: center; margin-bottom: 8px;
+  }
+  .mtf-verdict-agree.agree-buy  { background: #00e5a015; border: 1px solid var(--buy);  color: var(--buy); }
+  .mtf-verdict-agree.agree-sell { background: #ff446615; border: 1px solid var(--sell); color: var(--sell); }
+  .mtf-verdict-agree.agree-wait { background: #f0a50015; border: 1px solid var(--wait); color: var(--wait); }
 
   /* CONTROLS */
   .controls { display: flex; gap: 8px; margin-bottom: 16px; }
@@ -204,9 +236,15 @@
   <h1>Trend Judge</h1>
   <div class="sub">AUTO · EMA20 · ADX7 · ATR · MACD</div>
   <div class="header-right">
-    <div class="tf-badge" id="tfBadge" onclick="toggleTF()" title="タップで時間足切替">H1</div>
+    <div class="tf-badge" id="tfBadge" onclick="toggleTF()" title="タップで時間足切替（H1→H4→MTF）">H1</div>
     <div class="clock" id="clock"></div>
   </div>
+</div>
+
+<!-- BOOKMARK HINT -->
+<div class="bookmark-hint" id="bookmarkHint">
+  <div class="hint-title">📌 このURLをホーム画面に追加してください（APIキー保持用）</div>
+  <div class="hint-url" id="bookmarkUrl"></div>
 </div>
 
 <!-- MARKET STATUS -->
@@ -245,7 +283,7 @@
   <button class="btn-refresh-all" id="refreshAllBtn" onclick="refreshAll()">↻ 全更新</button>
 </div>
 
-<div class="legend">
+<div class="legend" id="legendBar">
   <span><div class="dot" style="background:var(--buy)"></div> BUY（3指標以上↑）</span>
   <span><div class="dot" style="background:var(--sell)"></div> SELL（3指標以上↓）</span>
   <span><div class="dot" style="background:var(--wait)"></div> WAIT（ADX25↓ or 不一致）</span>
@@ -267,24 +305,98 @@
 
 <script>
 let currentTF = localStorage.getItem('tj2_tf') || '1h';
+// mode: '1h' | '4h' | 'mtf'
 
 function toggleTF() {
-  currentTF = currentTF === '1h' ? '4h' : '1h';
+  if (currentTF === '1h')       currentTF = '4h';
+  else if (currentTF === '4h')  currentTF = 'mtf';
+  else                          currentTF = '1h';
   localStorage.setItem('tj2_tf', currentTF);
-  const badge = document.getElementById('tfBadge');
-  badge.textContent = currentTF === '1h' ? 'H1' : 'H4';
-  badge.className = 'tf-badge' + (currentTF === '4h' ? ' h4' : '');
+  updateTFBadge();
+  updateLegend();
   // データをリセットして再取得
-  pairs.forEach(p => { p.ema=null; p.adx=null; p.atr=null; p.macd=null; p.verdict='WAIT'; p.raw=null; p.updatedAt=null; p.error=null; });
-  save();
-  render();
+  pairs.forEach(p => resetPairData(p));
+  save(); render();
   if (apiKey && pairs.length > 0) refreshAll();
 }
 
+function updateTFBadge() {
+  const badge = document.getElementById('tfBadge');
+  if (currentTF === '1h')  { badge.textContent = 'H1';  badge.className = 'tf-badge'; }
+  if (currentTF === '4h')  { badge.textContent = 'H4';  badge.className = 'tf-badge h4'; }
+  if (currentTF === 'mtf') { badge.textContent = 'MTF'; badge.className = 'tf-badge mtf'; }
+}
+
+function updateLegend() {
+  const el = document.getElementById('legendBar');
+  if (currentTF === 'mtf') {
+    el.innerHTML = `
+      <span><div class="dot" style="background:var(--buy)"></div> BUY（H1+H4 両方BUY）</span>
+      <span><div class="dot" style="background:var(--sell)"></div> SELL（H1+H4 両方SELL）</span>
+      <span><div class="dot" style="background:var(--wait)"></div> WAIT（どちらか不一致）</span>
+      <span style="margin-left:auto; font-family:var(--mono); font-size:10px; color:var(--buy)">✦ MTF 高精度モード</span>`;
+  } else {
+    el.innerHTML = `
+      <span><div class="dot" style="background:var(--buy)"></div> BUY（3指標以上↑）</span>
+      <span><div class="dot" style="background:var(--sell)"></div> SELL（3指標以上↓）</span>
+      <span><div class="dot" style="background:var(--wait)"></div> WAIT（ADX25↓ or 不一致）</span>
+      <span style="margin-left:auto; font-family:var(--mono); font-size:10px; color:var(--dim)">▽ カードをタップで詳細</span>`;
+  }
+}
+
+function resetPairData(p) {
+  p.ema = null; p.adx = null; p.atr = null; p.macd = null;
+  p.verdict = 'WAIT'; p.raw = null; p.updatedAt = null; p.error = null;
+  // MTF用
+  p.h1 = null; p.h4 = null;
+}
+
 // ====== STATE ======
-let pairs = JSON.parse(localStorage.getItem('tj2_pairs') || '[]');
-// pair: { symbol, verdict, ema, adx, atr, macd, updatedAt, error, open }
-let apiKey = localStorage.getItem('tj2_key') || '';
+
+// URLハッシュをパース
+function parseHash() {
+  const result = {};
+  location.hash.replace(/^#/, '').split('&').forEach(part => {
+    const [k, v] = part.split('=');
+    if (k && v) result[k] = decodeURIComponent(v);
+  });
+  return result;
+}
+
+// URLハッシュを更新
+function updateHash(obj) {
+  try {
+    const h = parseHash();
+    Object.assign(h, obj);
+    const str = Object.entries(h).map(([k,v]) => k + '=' + encodeURIComponent(v)).join('&');
+    history.replaceState(null, '', location.pathname + location.search + '#' + str);
+  } catch(e) {}
+}
+
+// APIキー: URLハッシュ → localStorage
+function loadApiKey() {
+  const h = parseHash();
+  if (h.key) { localStorage.setItem('tj2_key', h.key); return h.key; }
+  return localStorage.getItem('tj2_key') || '';
+}
+
+// ペア: URLハッシュ → localStorage → デフォルト
+function loadPairs() {
+  const h = parseHash();
+  if (h.pairs) {
+    const symbols = h.pairs.split(',').filter(Boolean);
+    const stored = JSON.parse(localStorage.getItem('tj2_pairs') || '[]');
+    // symbolsを元にpairsを再構築（既存データは保持）
+    return symbols.map(sym => {
+      const existing = stored.find(p => p.symbol === sym);
+      return existing || { symbol: sym, verdict:'WAIT', ema:null, adx:null, atr:null, macd:null, updatedAt:null, error:null, open:false, raw:null };
+    });
+  }
+  return JSON.parse(localStorage.getItem('tj2_pairs') || '[]');
+}
+
+let pairs = loadPairs();
+let apiKey = loadApiKey();
 let autoTimer = null;
 let nextRefreshSec = 0;
 
@@ -294,8 +406,13 @@ function saveKey() {
   if (!v) return;
   apiKey = v;
   localStorage.setItem('tj2_key', v);
+  // URLハッシュに埋め込む → このURLをブックマーク/ホーム画面に追加すれば履歴削除後も復元
+  updateHash({ key: v });
   document.getElementById('keyStatus').textContent = '✓ 保存済み';
   document.getElementById('keyStatus').className = 'key-status ok';
+  // ブックマーク案内を表示
+  document.getElementById('bookmarkHint').style.display = 'block';
+  document.getElementById('bookmarkUrl').textContent = location.href;
 }
 
 function initKeyUI() {
@@ -303,6 +420,8 @@ function initKeyUI() {
     document.getElementById('apiKeyInput').value = apiKey;
     document.getElementById('keyStatus').textContent = '✓ 保存済み';
     document.getElementById('keyStatus').className = 'key-status ok';
+    // URLにキーがなければ埋め込む
+    if (!parseHash().key) { updateHash({ key: apiKey }); }
   }
 }
 
@@ -407,9 +526,9 @@ function calcEMAArr(data, period) {
 }
 
 // ====== API FETCH ======
-async function fetchAndAnalyze(symbol) {
+async function fetchAndAnalyze(symbol, tf) {
   if (!apiKey) throw new Error('APIキー未設定');
-  const url = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(symbol)}&interval=${currentTF}&outputsize=150&apikey=${apiKey}&format=JSON`;
+  const url = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(symbol)}&interval=${tf}&outputsize=150&apikey=${apiKey}&format=JSON`;
   const resp = await fetch(url);
   const json = await resp.json();
   if (json.status === 'error') throw new Error(json.message || 'API Error');
@@ -460,22 +579,26 @@ async function fetchAndAnalyze(symbol) {
   };
 }
 
-function judge(p) {
-  if (!p.ema || !p.adx || !p.macd) return 'WAIT';
-  // ADX < 25 → wait (ranging)
-  if (p.adx === 'bear') return 'WAIT';
-  const bullScore = ['ema','macd'].filter(k => p[k] === 'bull').length
-    + (p.atr === 'bull' ? 1 : 0);
-  const bearScore = ['ema','macd'].filter(k => p[k] === 'bear').length
-    + (p.atr === 'bear' ? 1 : 0);
-  // adx is bull (trending) - now need 2 more from ema/atr/macd
+function judgeResult(r) {
+  if (!r.ema || !r.adx || !r.macd) return 'WAIT';
+  if (r.adx === 'bear') return 'WAIT';
+  const bullScore = ['ema','macd'].filter(k => r[k] === 'bull').length + (r.atr === 'bull' ? 1 : 0);
+  const bearScore = ['ema','macd'].filter(k => r[k] === 'bear').length + (r.atr === 'bear' ? 1 : 0);
   if (bullScore >= 2) return 'BUY';
   if (bearScore >= 2) return 'SELL';
   return 'WAIT';
 }
 
+function judge(p) {
+  return judgeResult(p);
+}
+
 // ====== PAIR MANAGEMENT ======
-function save() { localStorage.setItem('tj2_pairs', JSON.stringify(pairs)); }
+function save() {
+  localStorage.setItem('tj2_pairs', JSON.stringify(pairs));
+  // ペアのsymbol一覧もURLハッシュに保存
+  updateHash({ pairs: pairs.map(p => p.symbol).join(',') });
+}
 
 function addPair() {
   const sel = document.getElementById('pairSelect').value;
@@ -516,13 +639,32 @@ async function fetchPair(symbol) {
   p.loading = true;
   render();
   try {
-    const result = await fetchAndAnalyze(symbol);
-    p.ema = result.ema;
-    p.adx = result.adx;
-    p.atr = result.atr;
-    p.macd = result.macd;
-    p.raw = result.raw;
-    p.verdict = judge(p);
+    if (currentTF === 'mtf') {
+      // MTFモード: H1とH4を両方取得
+      const [r1, r4] = await Promise.all([
+        fetchAndAnalyze(symbol, '1h'),
+        (async () => { await new Promise(r => setTimeout(r, 400)); return fetchAndAnalyze(symbol, '4h'); })()
+      ]);
+      p.h1 = r1;
+      p.h4 = r4;
+      // 個別verdict
+      p.h1.verdict = judgeResult(r1);
+      p.h4.verdict = judgeResult(r4);
+      // MTF combined verdict: 両方一致のみBUY/SELL
+      if (p.h1.verdict === 'BUY'  && p.h4.verdict === 'BUY')  p.verdict = 'BUY';
+      else if (p.h1.verdict === 'SELL' && p.h4.verdict === 'SELL') p.verdict = 'SELL';
+      else p.verdict = 'WAIT';
+      // 単体表示用（カードチップ）はh1を使う
+      p.ema = r1.ema; p.adx = r1.adx; p.atr = r1.atr; p.macd = r1.macd;
+      p.raw = r1.raw;
+    } else {
+      const result = await fetchAndAnalyze(symbol, currentTF);
+      p.ema = result.ema; p.adx = result.adx;
+      p.atr = result.atr; p.macd = result.macd;
+      p.raw = result.raw;
+      p.verdict = judge(p);
+      p.h1 = null; p.h4 = null;
+    }
     p.updatedAt = new Date().toLocaleTimeString('ja-JP', {hour:'2-digit',minute:'2-digit'});
     p.error = null;
   } catch(e) {
@@ -564,16 +706,31 @@ function updateNextRefreshLabel() {
     `次の自動更新まで ${m}:${String(s).padStart(2,'0')}`;
 }
 
-// ====== RENDER ======
 function chipHtml(value, labelBull, labelBear, labelNeutral) {
   if (!value) return `<div class="ind-chip">--</div>`;
   const label = value === 'bull' ? labelBull : (value === 'bear' ? labelBear : (labelNeutral || '--'));
   return `<div class="ind-chip ${value}">${label}</div>`;
 }
 
+function chipsRowHtml(r) {
+  if (!r) return '<div class="ind-chip">--</div>';
+  return `
+    ${chipHtml(r.ema,  'EMA↑', 'EMA↓')}
+    ${chipHtml(r.adx,  'ADX↑', 'ADX↓')}
+    ${chipHtml(r.atr,  'ATR拡', 'ATR縮', 'ATR横')}
+    ${chipHtml(r.macd, 'MACD↑', 'MACD↓')}
+  `;
+}
+
+function verdictPill(v, size) {
+  const sz = size === 'sm' ? 'font-size:11px;padding:2px 7px;' : '';
+  return `<span class="chip ${v.toLowerCase()}" style="${sz}">${v}</span>`;
+}
+
 function render() {
   const list = document.getElementById('pairList');
   let buyCount=0, sellCount=0, waitCount=0;
+  const isMtf = currentTF === 'mtf';
 
   list.innerHTML = pairs.map(p => {
     const v = p.verdict || 'WAIT';
@@ -589,15 +746,89 @@ function render() {
         ? `<div class="verdict ERR">ERR</div>`
         : `<div class="verdict ${v}">${v}</div>`;
 
-    const chips = p.loading ? '<div class="ind-chip">読込中...</div>' : `
-      ${chipHtml(p.ema, 'EMA↑', 'EMA↓')}
-      ${chipHtml(p.adx, 'ADX↑', 'ADX↓')}
-      ${chipHtml(p.atr, 'ATR拡', 'ATR縮', 'ATR横')}
-      ${chipHtml(p.macd, 'MACD↑', 'MACD↓')}
-    `;
+    // --- チップ表示 ---
+    let chipsHtml;
+    if (p.loading) {
+      chipsHtml = '<div class="ind-chip">読込中...</div>';
+    } else if (isMtf && p.h1 && p.h4) {
+      // MTFモード: H1とH4を2段で表示
+      chipsHtml = `
+        <div class="mtf-chips">
+          <div class="mtf-row">
+            <span class="mtf-row-label">H1</span>
+            ${chipsRowHtml(p.h1)}
+            <span style="font-family:var(--mono);font-size:10px;font-weight:700;margin-left:4px;color:${p.h1.verdict==='BUY'?'var(--buy)':p.h1.verdict==='SELL'?'var(--sell)':'var(--wait)'}">${p.h1.verdict}</span>
+          </div>
+          <div class="mtf-row">
+            <span class="mtf-row-label">H4</span>
+            ${chipsRowHtml(p.h4)}
+            <span style="font-family:var(--mono);font-size:10px;font-weight:700;margin-left:4px;color:${p.h4.verdict==='BUY'?'var(--buy)':p.h4.verdict==='SELL'?'var(--sell)':'var(--wait)'}">${p.h4.verdict}</span>
+          </div>
+        </div>`;
+    } else {
+      chipsHtml = chipsRowHtml(p);
+    }
 
+    // --- 詳細パネル ---
     let detailHtml = '';
-    if (p.raw) {
+    if (isMtf && p.h1 && p.h4) {
+      // MTF詳細: H1とH4を並べて表示
+      const agreeClass = v === 'BUY' ? 'agree-buy' : v === 'SELL' ? 'agree-sell' : 'agree-wait';
+      const agreeText = v === 'BUY'
+        ? '✦ H1 + H4 両方BUY — 高信頼シグナル'
+        : v === 'SELL'
+          ? '✦ H1 + H4 両方SELL — 高信頼シグナル'
+          : '⏸ H1 / H4 不一致 — エントリー見送り';
+      detailHtml = `
+        <div class="card-detail ${p.open ? 'visible' : ''}">
+          <div class="mtf-verdict-agree ${agreeClass}">${agreeText}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div>
+              <div class="detail-tf-header"><span class="tf-pill">H1 / 1時間足</span></div>
+              <div class="detail-grid">
+                <div class="detail-block">
+                  <div class="detail-label">EMA20 vs Price</div>
+                  <div class="detail-value ${p.h1.ema}">${p.h1.raw.price} vs ${p.h1.raw.ema20}</div>
+                </div>
+                <div class="detail-block">
+                  <div class="detail-label">ADX7</div>
+                  <div class="detail-value ${p.h1.adx}">${p.h1.raw.adxVal} ${p.h1.adx==='bull'?'(トレンド)':'(レンジ)'}</div>
+                </div>
+                <div class="detail-block">
+                  <div class="detail-label">ATR 傾き</div>
+                  <div class="detail-value ${p.h1.atr}">${p.h1.raw.atrVal} (${p.h1.raw.atrDiffPct}%)</div>
+                </div>
+                <div class="detail-block">
+                  <div class="detail-label">MACD Line</div>
+                  <div class="detail-value ${p.h1.macd}">${p.h1.raw.macdLine}</div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="detail-tf-header"><span class="tf-pill h4">H4 / 4時間足</span></div>
+              <div class="detail-grid">
+                <div class="detail-block">
+                  <div class="detail-label">EMA20 vs Price</div>
+                  <div class="detail-value ${p.h4.ema}">${p.h4.raw.price} vs ${p.h4.raw.ema20}</div>
+                </div>
+                <div class="detail-block">
+                  <div class="detail-label">ADX7</div>
+                  <div class="detail-value ${p.h4.adx}">${p.h4.raw.adxVal} ${p.h4.adx==='bull'?'(トレンド)':'(レンジ)'}</div>
+                </div>
+                <div class="detail-block">
+                  <div class="detail-label">ATR 傾き</div>
+                  <div class="detail-value ${p.h4.atr}">${p.h4.raw.atrVal} (${p.h4.raw.atrDiffPct}%)</div>
+                </div>
+                <div class="detail-block">
+                  <div class="detail-label">MACD Line</div>
+                  <div class="detail-value ${p.h4.macd}">${p.h4.raw.macdLine}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          ${p.updatedAt ? `<div class="updated-at">更新: ${p.updatedAt}</div>` : ''}
+        </div>`;
+    } else if (p.raw) {
       detailHtml = `
         <div class="card-detail ${p.open ? 'visible' : ''}">
           <div class="detail-grid">
@@ -629,7 +860,7 @@ function render() {
     <div class="pair-card ${p.loading ? 'loading' : v}" id="card-${p.symbol.replace('/','_')}">
       <div class="card-header" onclick="toggleOpen('${p.symbol}')">
         <div class="pair-name">${p.symbol}</div>
-        <div class="inds-row">${chips}</div>
+        <div class="inds-row">${chipsHtml}</div>
         ${verdictHtml}
         <button class="icon-btn ${p.loading ? 'spinning' : ''}" onclick="event.stopPropagation();fetchPair('${p.symbol}')" title="更新">↻</button>
         <button class="icon-btn del" onclick="event.stopPropagation();removePair('${p.symbol}')" title="削除">×</button>
@@ -704,18 +935,20 @@ function renderMarketBanner() {
 
 // ====== INIT ======
 if (pairs.length === 0) {
-  ['USD/JPY','EUR/JPY','GBP/JPY','EUR/USD','GBP/USD'].forEach(symbol => {
-    pairs.push({ symbol, verdict:'WAIT', ema:null, adx:null, atr:null, macd:null, updatedAt:null, error:null, open:false, raw:null });
+  ['XAU/USD','USD/JPY','EUR/JPY','GBP/JPY','EUR/USD','GBP/USD'].forEach(symbol => {
+    pairs.push({ symbol, verdict:'WAIT', ema:null, adx:null, atr:null, macd:null, updatedAt:null, error:null, open:false, raw:null, h1:null, h4:null });
   });
   save();
 }
 initKeyUI();
-// TFバッジ初期化
-const _badge = document.getElementById('tfBadge');
-_badge.textContent = currentTF === '1h' ? 'H1' : 'H4';
-_badge.className = 'tf-badge' + (currentTF === '4h' ? ' h4' : '');
+if (apiKey) {
+  document.getElementById('bookmarkHint').style.display = 'block';
+  document.getElementById('bookmarkUrl').textContent = location.href;
+}
+updateTFBadge();
+updateLegend();
 renderMarketBanner();
-setInterval(renderMarketBanner, 60000); // 1分ごとに更新
+setInterval(renderMarketBanner, 60000);
 render();
 if (apiKey && pairs.length > 0) {
   refreshAll();
