@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trend Judge AUTO</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700&display=swap');
+
+  :root {
+    --bg: #0a0d11;
+    --surface: #111620;
+    --surface2: #0d1018;
+    --border: #1e2736;
+    --border2: #2a3548;
+    --text: #c8d4e8;
+    --dim: #4a5a72;
+    --buy: #00e5a0;
+    --buy-dim: #00e5a015;
+    --sell: #ff4466;
+    --sell-dim: #ff446615;
+    --wait: #f0a500;
+    --wait-dim: #f0a50015;
+    --bull: #00c87a;
+    --bear: #ff3355;
+    --mono: 'Share Tech Mono', monospace;
+    --sans: 'Barlow Condensed', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; padding: 16px; }
+
+  /* MARKET STATUS BANNER */
+  .market-banner {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; border-radius: 6px; margin-bottom: 14px;
+    font-family: var(--mono); font-size: 12px; letter-spacing: 1px;
+    border: 1px solid; animation: pulse-border 2s ease-in-out infinite;
+  }
+  .market-banner.closed {
+    background: #1a0a00; border-color: var(--wait); color: var(--wait);
+  }
+  .market-banner.open {
+    background: #001a0d; border-color: var(--buy); color: var(--buy);
+  }
+  .market-banner .blink {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    animation: blink 1.2s step-start infinite;
+  }
+  .market-banner.closed .blink { background: var(--wait); }
+  .market-banner.open   .blink { background: var(--buy); }
+  .market-banner .mkt-detail { margin-left: auto; font-size: 10px; color: var(--dim); }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+  @keyframes pulse-border { 0%,100%{opacity:1} 50%{opacity:0.7} }
+
+  /* API KEY SETUP */
+  .setup-bar {
+    display: flex; gap: 8px; margin-bottom: 16px; align-items: center;
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 6px; padding: 10px 14px;
+  }
+  .setup-label { font-size: 11px; letter-spacing: 2px; color: var(--dim); text-transform: uppercase; white-space: nowrap; }
+  .setup-bar input {
+    flex: 1; background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); padding: 6px 10px; font-family: var(--mono); font-size: 12px;
+    border-radius: 4px; outline: none;
+  }
+  .setup-bar input:focus { border-color: #3a6af0; }
+  .key-status { font-family: var(--mono); font-size: 11px; white-space: nowrap; }
+  .key-status.ok { color: var(--buy); }
+  .key-status.ng { color: var(--sell); }
+  .bookmark-hint {
+    display: none; margin-bottom: 12px; padding: 10px 14px;
+    background: #001a0d; border: 1px solid var(--buy); border-radius: 6px;
+    font-size: 11px; line-height: 1.6;
+  }
+  .bookmark-hint .hint-title { color: var(--buy); font-weight: 700; letter-spacing: 1px; margin-bottom: 4px; }
+  .bookmark-hint .hint-url { font-family: var(--mono); font-size: 10px; color: var(--dim); word-break: break-all; }
+
+  /* HEADER */
+  .header {
+    display: flex; align-items: baseline; gap: 12px;
+    margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border);
+  }
+  .header h1 { font-size: 22px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: #e0eaff; }
+  .header .sub { font-family: var(--mono); font-size: 10px; color: var(--dim); letter-spacing: 1px; }
+  .header-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .clock { font-family: var(--mono); font-size: 12px; color: var(--dim); }
+  .tf-badge {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 1px;
+    background: #1a2a4a; border: 1px solid #3a6af0; color: #6a9aff;
+    padding: 3px 8px; border-radius: 3px; cursor: pointer;
+    user-select: none; transition: all 0.15s;
+  }
+  .tf-badge:hover { background: #2a3a5a; }
+  .tf-badge.h4  { background: #2a1a4a; border-color: #9a6aff; color: #c09aff; }
+  .tf-badge.mtf { background: #1a2a1a; border-color: var(--buy); color: var(--buy); letter-spacing: 2px; }
+
+  /* MTF dual chip rows */
+  .mtf-chips { display: flex; flex-direction: column; gap: 4px; }
+  .mtf-row-label { font-family: var(--mono); font-size: 9px; color: var(--dim); letter-spacing: 1px; margin-right: 4px; }
+  .mtf-row { display: flex; align-items: center; gap: 4px; }
+
+  /* MTF detail grid - 2 columns for H1/H4 */
+  .detail-tf-header {
+    font-size: 10px; letter-spacing: 3px; color: var(--dim); text-transform: uppercase;
+    padding: 4px 0 6px; margin-bottom: 4px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .detail-tf-header .tf-pill {
+    font-family: var(--mono); font-size: 10px; padding: 2px 7px; border-radius: 3px;
+    background: #1a2a4a; border: 1px solid #3a6af0; color: #6a9aff;
+  }
+  .detail-tf-header .tf-pill.h4 { background: #2a1a4a; border-color: #9a6aff; color: #c09aff; }
+  .mtf-verdict-agree {
+    font-family: var(--mono); font-size: 11px; font-weight: 700;
+    padding: 4px 12px; border-radius: 4px; text-align: center; margin-bottom: 8px;
+  }
+  .mtf-verdict-agree.agree-buy  { background: #00e5a015; border: 1px solid var(--buy);  color: var(--buy); }
+  .mtf-verdict-agree.agree-sell { background: #ff446615; border: 1px solid var(--sell); color: var(--sell); }
+  .mtf-verdict-agree.agree-wait { background: #f0a50015; border: 1px solid var(--wait); color: var(--wait); }
+
+  /* CONTROLS */
+  .controls { display: flex; gap: 8px; margin-bottom: 16px; }
+  .controls select, .controls input {
+    background: var(--surface); border: 1px solid var(--border2); color: var(--text);
+    padding: 8px 12px; font-family: var(--mono); font-size: 13px;
+    border-radius: 4px; outline: none; flex: 1;
+  }
+  .btn {
+    background: #1a2a4a; border: 1px solid #3a6af0; color: #6a9aff;
+    padding: 8px 16px; font-family: var(--sans); font-size: 13px; font-weight: 600;
+    letter-spacing: 1px; border-radius: 4px; cursor: pointer; transition: all 0.15s;
+    text-transform: uppercase; white-space: nowrap;
+  }
+  .btn:hover { background: #3a6af020; color: #8ab0ff; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-refresh-all {
+    background: #0a1a12; border: 1px solid var(--bull); color: var(--bull);
+    padding: 8px 16px; font-family: var(--sans); font-size: 13px; font-weight: 600;
+    letter-spacing: 1px; border-radius: 4px; cursor: pointer; transition: all 0.15s;
+    text-transform: uppercase; white-space: nowrap;
+  }
+  .btn-refresh-all:hover { background: #00e5a010; }
+  .btn-refresh-all:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* LEGEND */
+  .legend { display: flex; gap: 16px; margin-bottom: 12px; font-size: 12px; color: var(--dim); letter-spacing: 1px; flex-wrap: wrap; }
+  .legend span { display: flex; align-items: center; gap: 5px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* PAIR CARD */
+  .pair-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; margin-bottom: 10px; overflow: hidden; transition: border-color 0.3s;
+  }
+  .pair-card.BUY  { border-color: var(--buy); }
+  .pair-card.SELL { border-color: var(--sell); }
+  .pair-card.WAIT { border-color: var(--wait); }
+  .pair-card.loading { border-color: #3a6af0; }
+
+  .card-header { display: flex; align-items: center; padding: 10px 14px; gap: 10px; }
+  .pair-name { font-family: var(--mono); font-size: 15px; font-weight: 700; color: #e0eaff; letter-spacing: 1px; flex: 1; }
+
+  .inds-row { display: flex; gap: 6px; }
+  .ind-chip {
+    font-family: var(--mono); font-size: 10px; padding: 3px 6px;
+    border-radius: 3px; border: 1px solid var(--border2); color: var(--dim);
+    white-space: nowrap; letter-spacing: 0.5px;
+  }
+  .ind-chip.bull { background: #002a1a; border-color: var(--bull); color: var(--bull); }
+  .ind-chip.bear { background: #2a0010; border-color: var(--bear); color: var(--bear); }
+  .ind-chip.neutral { background: #1a1e28; border-color: #4a5a72; color: #7a8a9a; }
+
+  .verdict { font-family: var(--mono); font-size: 14px; font-weight: 700; letter-spacing: 2px; min-width: 52px; text-align: center; padding: 4px 10px; border-radius: 3px; }
+  .verdict.BUY  { color: var(--buy);  background: var(--buy-dim); }
+  .verdict.SELL { color: var(--sell); background: var(--sell-dim); }
+  .verdict.WAIT { color: var(--wait); background: var(--wait-dim); }
+  .verdict.LOAD { color: #3a6af0; background: #1a2a4a20; font-size: 11px; }
+  .verdict.ERR  { color: var(--sell); background: var(--sell-dim); font-size: 10px; }
+
+  .icon-btn {
+    background: none; border: none; color: var(--dim); cursor: pointer;
+    font-size: 14px; padding: 2px 5px; transition: color 0.15s; line-height: 1;
+  }
+  .icon-btn:hover { color: var(--text); }
+  .icon-btn.del:hover { color: var(--sell); }
+  .icon-btn.spinning { animation: spin 1s linear infinite; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* DETAIL EXPAND */
+  .card-detail {
+    padding: 0 14px 12px;
+    display: none;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+  }
+  .card-detail.visible { display: block; }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .detail-block { background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; padding: 8px 10px; }
+  .detail-label { font-size: 10px; letter-spacing: 2px; color: var(--dim); text-transform: uppercase; margin-bottom: 4px; }
+  .detail-value { font-family: var(--mono); font-size: 13px; font-weight: 700; }
+  .detail-value.bull { color: var(--bull); }
+  .detail-value.bear { color: var(--bear); }
+  .detail-value.neutral { color: var(--dim); }
+
+  /* OVERHEAT BADGE */
+  .heat-badge {
+    font-family: var(--mono); font-size: 11px; font-weight: 700;
+    padding: 3px 9px; border-radius: 3px; letter-spacing: 1px;
+    white-space: nowrap; animation: heat-pulse 1.8s ease-in-out infinite;
+  }
+  .heat-badge.hot  { background: #2a0008; border: 1px solid #ff2244; color: #ff6688; }
+  .heat-badge.cold { background: #001820; border: 1px solid #00aaff; color: #66ccff; }
+  @keyframes heat-pulse { 0%,100%{opacity:1} 50%{opacity:0.65} }
+
+  /* RSI BAR */
+  .rsi-bar-wrap { margin-top: 6px; height: 6px; background: #0d1018; border-radius: 3px; overflow: hidden; position: relative; }
+  .rsi-bar-fill { height: 100%; border-radius: 3px; }
+  .rsi-zone-line { position: absolute; top: 0; width: 1px; height: 100%; background: #ffffff25; }
+  .updated-at { margin-top: 8px; font-family: var(--mono); font-size: 10px; color: var(--dim); text-align: right; }
+
+  /* SUMMARY */
+  .summary { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; gap: 12px; }
+  .sum-block { flex: 1; text-align: center; padding: 12px; border-radius: 5px; border: 1px solid var(--border); }
+  .sum-block.buy-block  { background: var(--buy-dim);  border-color: var(--buy);  }
+  .sum-block.sell-block { background: var(--sell-dim); border-color: var(--sell); }
+  .sum-block.wait-block { background: var(--wait-dim); border-color: var(--wait); }
+  .sum-num { font-family: var(--mono); font-size: 28px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+  .sum-block.buy-block  .sum-num { color: var(--buy);  }
+  .sum-block.sell-block .sum-num { color: var(--sell); }
+  .sum-block.wait-block .sum-num { color: var(--wait); }
+  .sum-label { font-size: 11px; letter-spacing: 2px; color: var(--dim); text-transform: uppercase; }
+
+  .footer-bar { margin-top: 14px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .auto-refresh-label { font-family: var(--mono); font-size: 11px; color: var(--dim); }
+  .btn-sm {
+    background: none; border: 1px solid var(--border2); color: var(--dim);
+    padding: 6px 12px; font-family: var(--sans); font-size: 12px;
+    letter-spacing: 1px; border-radius: 4px; cursor: pointer; text-transform: uppercase; transition: all 0.15s;
+  }
+  .btn-sm:hover { color: var(--text); border-color: var(--dim); }
+
+  .error-msg { font-family: var(--mono); font-size: 10px; color: var(--sell); margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Trend Judge</h1>
+  <div class="sub">AUTO · EMA20 · ADX7 · ATR · MACD · RSI14</div>
+  <div class="header-right">
+    <div class="tf-badge" id="tfBadge" onclick="toggleTF()" title="タップで時間足切替（H1→H4→MTF）">H1</div>
+    <div class="clock" id="clock"></div>
+  </div>
+</div>
+
+<!-- BOOKMARK HINT -->
+<div class="bookmark-hint" id="bookmarkHint">
+  <div class="hint-title">📌 このURLをホーム画面に追加してください（APIキー保持用）</div>
+  <div class="hint-url" id="bookmarkUrl"></div>
+</div>
+
+<!-- MARKET STATUS -->
+<div id="marketBanner"></div>
+
+<!-- API KEY -->
+<div class="setup-bar">
+  <div class="setup-label">API Key</div>
+  <input type="password" id="apiKeyInput" placeholder="Twelve Data APIキーを入力" autocomplete="off">
+  <button class="btn" onclick="saveKey()">保存</button>
+  <div class="key-status" id="keyStatus"></div>
+</div>
+
+<!-- CONTROLS -->
+<div class="controls">
+  <select id="pairSelect">
+    <option value="">ペアを選択</option>
+    <optgroup label="メジャー">
+      <option>USD/JPY</option><option>EUR/USD</option><option>GBP/USD</option>
+      <option>AUD/USD</option><option>USD/CAD</option><option>USD/CHF</option><option>NZD/USD</option>
+    </optgroup>
+    <optgroup label="クロス円">
+      <option>EUR/JPY</option><option>GBP/JPY</option><option>AUD/JPY</option>
+      <option>CAD/JPY</option><option>CHF/JPY</option><option>NZD/JPY</option>
+    </optgroup>
+    <optgroup label="クロス">
+      <option>EUR/GBP</option><option>EUR/AUD</option><option>GBP/AUD</option>
+      <option>GBP/CAD</option><option>EUR/CAD</option><option>AUD/CAD</option>
+    </optgroup>
+    <optgroup label="その他">
+      <option>XAU/USD</option><option>BTC/USD</option>
+    </optgroup>
+  </select>
+  <input type="text" id="customPair" placeholder="手入力（例：XAU/USD）" maxlength="10">
+  <button class="btn" onclick="addPair()">＋追加</button>
+  <button class="btn-refresh-all" id="refreshAllBtn" onclick="refreshAll()">↻ 全更新</button>
+</div>
+
+<div class="legend" id="legendBar">
+  <span><div class="dot" style="background:var(--buy)"></div> BUY（3指標以上↑）</span>
+  <span><div class="dot" style="background:var(--sell)"></div> SELL（3指標以上↓）</span>
+  <span><div class="dot" style="background:var(--wait)"></div> WAIT（ADX25↓ or 不一致）</span>
+  <span style="font-family:var(--mono);font-size:10px;color:var(--dim)">RSI50↑/↓で方向判定</span>
+</div>
+
+<div id="pairList"></div>
+
+<div class="summary">
+  <div class="sum-block buy-block"><div class="sum-num" id="buyCount">0</div><div class="sum-label">Buy</div></div>
+  <div class="sum-block sell-block"><div class="sum-num" id="sellCount">0</div><div class="sum-label">Sell</div></div>
+  <div class="sum-block wait-block"><div class="sum-num" id="waitCount">0</div><div class="sum-label">Wait</div></div>
+</div>
+
+<div class="footer-bar">
+  <div class="auto-refresh-label" id="nextRefreshLabel"></div>
+  <button class="btn-sm" onclick="removeAll()">全削除</button>
+</div>
+
+<script>
+let currentTF = localStorage.getItem('tj2_tf') || '1h';
+// mode: '1h' | '4h' | 'mtf'
+
+function toggleTF() {
+  if (currentTF === '1h')       currentTF = '4h';
+  else if (currentTF === '4h')  currentTF = 'mtf';
+  else                          currentTF = '1h';
+  localStorage.setItem('tj2_tf', currentTF);
+  updateTFBadge();
+  updateLegend();
+  // データをリセットして再取得
+  pairs.forEach(p => resetPairData(p));
+  save(); render();
+  if (apiKey && pairs.length > 0) refreshAll();
+}
+
+function updateTFBadge() {
+  const badge = document.getElementById('tfBadge');
+  if (currentTF === '1h')  { badge.textContent = 'H1';  badge.className = 'tf-badge'; }
+  if (currentTF === '4h')  { badge.textContent = 'H4';  badge.className = 'tf-badge h4'; }
+  if (currentTF === 'mtf') { badge.textContent = 'MTF'; badge.className = 'tf-badge mtf'; }
+}
+
+function updateLegend() {
+  const el = document.getElementById('legendBar');
+  if (currentTF === 'mtf') {
+    el.innerHTML = `
+      <span><div class="dot" style="background:var(--buy)"></div> BUY（H1+H4 両方BUY）</span>
+      <span><div class="dot" style="background:var(--sell)"></div> SELL（H1+H4 両方SELL）</span>
+      <span><div class="dot" style="background:var(--wait)"></div> WAIT（どちらか不一致）</span>
+      <span style="margin-left:auto; font-family:var(--mono); font-size:10px; color:var(--buy)">✦ MTF 高精度モード</span>`;
+  } else {
+    el.innerHTML = `
+      <span><div class="dot" style="background:var(--buy)"></div> BUY（3指標以上↑）</span>
+      <span><div class="dot" style="background:var(--sell)"></div> SELL（3指標以上↓）</span>
+      <span><div class="dot" style="background:var(--wait)"></div> WAIT（ADX25↓ or 不一致）</span>
+      <span style="margin-left:auto; font-family:var(--mono); font-size:10px; color:var(--dim)">▽ カードをタップで詳細</span>`;
+  }
+}
+
+function resetPairData(p) {
+  p.ema = null; p.adx = null; p.atr = null; p.macd = null;
+  p.verdict = 'WAIT'; p.raw = null; p.updatedAt = null; p.error = null;
+  // MTF用
+  p.h1 = null; p.h4 = null;
+}
+
+// ====== STATE ======
+
+// URLハッシュをパース
+function parseHash() {
+  const result = {};
+  location.hash.replace(/^#/, '').split('&').forEach(part => {
+    const [k, v] = part.split('=');
+    if (k && v) result[k] = decodeURIComponent(v);
+  });
+  return result;
+}
+
+// URLハッシュを更新
+function updateHash(obj) {
+  try {
+    const h = parseHash();
+    Object.assign(h, obj);
+    const str = Object.entries(h).map(([k,v]) => k + '=' + encodeURIComponent(v)).join('&');
+    history.replaceState(null, '', location.pathname + location.search + '#' + str);
+  } catch(e) {}
+}
+
+// APIキー: URLハッシュ → localStorage
+function loadApiKey() {
+  const h = parseHash();
+  if (h.key) { localStorage.setItem('tj2_key', h.key); return h.key; }
+  return localStorage.getItem('tj2_key') || '';
+}
+
+// ペア: URLハッシュ → localStorage → デフォルト
+function loadPairs() {
+  const h = parseHash();
+  if (h.pairs) {
+    const symbols = h.pairs.split(',').filter(Boolean);
+    const stored = JSON.parse(localStorage.getItem('tj2_pairs') || '[]');
+    // symbolsを元にpairsを再構築（既存データは保持）
+    return symbols.map(sym => {
+      const existing = stored.find(p => p.symbol === sym);
+      return existing || { symbol: sym, verdict:'WAIT', ema:null, adx:null, atr:null, macd:null, updatedAt:null, error:null, open:false, raw:null };
+    });
+  }
+  return JSON.parse(localStorage.getItem('tj2_pairs') || '[]');
+}
+
+let pairs = loadPairs();
+let apiKey = loadApiKey();
+let autoTimer = null;
+let nextRefreshSec = 0;
+
+// ====== KEY ======
+function saveKey() {
+  const v = document.getElementById('apiKeyInput').value.trim();
+  if (!v) return;
+  apiKey = v;
+  localStorage.setItem('tj2_key', v);
+  // URLハッシュに埋め込む → このURLをブックマーク/ホーム画面に追加すれば履歴削除後も復元
+  updateHash({ key: v });
+  document.getElementById('keyStatus').textContent = '✓ 保存済み';
+  document.getElementById('keyStatus').className = 'key-status ok';
+  // ブックマーク案内を表示
+  document.getElementById('bookmarkHint').style.display = 'block';
+  document.getElementById('bookmarkUrl').textContent = location.href;
+}
+
+function initKeyUI() {
+  if (apiKey) {
+    document.getElementById('apiKeyInput').value = apiKey;
+    document.getElementById('keyStatus').textContent = '✓ 保存済み';
+    document.getElementById('keyStatus').className = 'key-status ok';
+    // URLにキーがなければ埋め込む
+    if (!parseHash().key) { updateHash({ key: apiKey }); }
+  }
+}
+
+// ====== INDICATOR MATH ======
+function calcEMA(data, period) {
+  // data: array of closes, oldest first
+  const k = 2 / (period + 1);
+  let ema = data.slice(0, period).reduce((a, b) => a + b, 0) / period;
+  for (let i = period; i < data.length; i++) {
+    ema = data[i] * k + ema * (1 - k);
+  }
+  return ema;
+}
+
+function calcATR(highs, lows, closes, period) {
+  // returns array of ATR values (last `period` bars worth)
+  const trs = [];
+  for (let i = 1; i < highs.length; i++) {
+    const tr = Math.max(
+      highs[i] - lows[i],
+      Math.abs(highs[i] - closes[i - 1]),
+      Math.abs(lows[i] - closes[i - 1])
+    );
+    trs.push(tr);
+  }
+  // Wilder smoothing
+  let atr = trs.slice(0, period).reduce((a, b) => a + b, 0) / period;
+  const atrs = [atr];
+  for (let i = period; i < trs.length; i++) {
+    atr = (atr * (period - 1) + trs[i]) / period;
+    atrs.push(atr);
+  }
+  return atrs;
+}
+
+function calcADX(highs, lows, closes, period) {
+  // Returns final ADX value
+  const len = highs.length;
+  const plusDM = [], minusDM = [], tr = [];
+  for (let i = 1; i < len; i++) {
+    const upMove = highs[i] - highs[i - 1];
+    const downMove = lows[i - 1] - lows[i];
+    plusDM.push(upMove > downMove && upMove > 0 ? upMove : 0);
+    minusDM.push(downMove > upMove && downMove > 0 ? downMove : 0);
+    tr.push(Math.max(
+      highs[i] - lows[i],
+      Math.abs(highs[i] - closes[i - 1]),
+      Math.abs(lows[i] - closes[i - 1])
+    ));
+  }
+  // Wilder smooth
+  function wilderSmooth(arr, p) {
+    let sum = arr.slice(0, p).reduce((a, b) => a + b, 0);
+    const smoothed = [sum];
+    for (let i = p; i < arr.length; i++) {
+      sum = sum - sum / p + arr[i];
+      smoothed.push(sum);
+    }
+    return smoothed;
+  }
+  const sTR = wilderSmooth(tr, period);
+  const sPDM = wilderSmooth(plusDM, period);
+  const sMDM = wilderSmooth(minusDM, period);
+  const dx = [];
+  for (let i = 0; i < sTR.length; i++) {
+    if (sTR[i] === 0) { dx.push(0); continue; }
+    const pDI = 100 * sPDM[i] / sTR[i];
+    const mDI = 100 * sMDM[i] / sTR[i];
+    const d = Math.abs(pDI - mDI) / (pDI + mDI || 1);
+    dx.push(100 * d);
+  }
+  // ADX = Wilder smooth of DX
+  const adxArr = wilderSmooth(dx, period);
+  return adxArr[adxArr.length - 1];
+}
+
+function calcMACD(closes) {
+  // Returns { line, signal, histogram } for last bar
+  const ema12 = calcEMAArr(closes, 12);
+  const ema26 = calcEMAArr(closes, 26);
+  const macdLine = ema12.map((v, i) => v - ema26[i]);
+  // signal = EMA9 of macdLine (from index 26 onward basically, but we calc on full)
+  const signal = calcEMAArr(macdLine, 9);
+  const last = macdLine.length - 1;
+  return {
+    line: macdLine[last],
+    signal: signal[last],
+    histogram: macdLine[last] - signal[last]
+  };
+}
+
+function calcRSI(closes, period = 14) {
+  if (closes.length < period + 1) return 50;
+  let avgGain = 0, avgLoss = 0;
+  for (let i = 1; i <= period; i++) {
+    const diff = closes[i] - closes[i - 1];
+    if (diff >= 0) avgGain += diff; else avgLoss -= diff;
+  }
+  avgGain /= period;
+  avgLoss /= period;
+  for (let i = period + 1; i < closes.length; i++) {
+    const diff = closes[i] - closes[i - 1];
+    const g = diff >= 0 ? diff : 0;
+    const l = diff < 0 ? -diff : 0;
+    avgGain = (avgGain * (period - 1) + g) / period;
+    avgLoss = (avgLoss * (period - 1) + l) / period;
+  }
+  if (avgLoss === 0) return 100;
+  const rs = avgGain / avgLoss;
+  return 100 - (100 / (1 + rs));
+}
+
+function calcEMAArr(data, period) {
+  const k = 2 / (period + 1);
+  const result = new Array(data.length).fill(0);
+  result[period - 1] = data.slice(0, period).reduce((a, b) => a + b, 0) / period;
+  for (let i = period; i < data.length; i++) {
+    result[i] = data[i] * k + result[i - 1] * (1 - k);
+  }
+  // fill early with first valid
+  for (let i = 0; i < period - 1; i++) result[i] = result[period - 1];
+  return result;
+}
+
+// ====== API FETCH ======
+async function fetchAndAnalyze(symbol, tf) {
+  if (!apiKey) throw new Error('APIキー未設定');
+  const url = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(symbol)}&interval=${tf}&outputsize=150&apikey=${apiKey}&format=JSON`;
+  const resp = await fetch(url);
+  const json = await resp.json();
+  if (json.status === 'error') throw new Error(json.message || 'API Error');
+  const values = json.values;
+  if (!values || values.length < 60) throw new Error('データ不足');
+
+  // Twelve Data returns newest first → reverse
+  const candles = [...values].reverse();
+  const closes = candles.map(c => parseFloat(c.close));
+  const highs  = candles.map(c => parseFloat(c.high));
+  const lows   = candles.map(c => parseFloat(c.low));
+  const lastClose = closes[closes.length - 1];
+
+  // EMA20
+  const ema20val = calcEMA(closes, 20);
+  const emaSignal = lastClose > ema20val ? 'bull' : 'bear';
+
+  // ADX7
+  const adxVal = calcADX(highs, lows, closes, 7);
+  const adxSignal = adxVal >= 25 ? 'bull' : 'bear'; // bull = trending, bear = ranging
+
+  // ATR14 slope (compare last ATR vs 5 bars ago)
+  const atrArr = calcATR(highs, lows, closes, 14);
+  const atrLast = atrArr[atrArr.length - 1];
+  const atrPrev = atrArr[atrArr.length - 6] || atrLast;
+  const atrDiff = (atrLast - atrPrev) / atrPrev;
+  let atrSignal = 'neutral';
+  if (atrDiff > 0.03) atrSignal = 'bull';
+  else if (atrDiff < -0.03) atrSignal = 'bear';
+
+  // MACD
+  const macd = calcMACD(closes);
+  const macdSignal = macd.line > 0 ? 'bull' : 'bear';
+
+  // RSI14 — 50以上でbull、50以下でbear
+  const rsiVal = calcRSI(closes, 14);
+  const rsiSignal = rsiVal >= 50 ? 'bull' : 'bear';
+
+  return {
+    ema: emaSignal,
+    adx: adxSignal,
+    atr: atrSignal,
+    macd: macdSignal,
+    rsi: rsiSignal,
+    raw: {
+      ema20: ema20val.toFixed(5),
+      price: lastClose.toFixed(5),
+      adxVal: adxVal.toFixed(1),
+      atrVal: atrLast.toFixed(5),
+      atrDiffPct: (atrDiff * 100).toFixed(1),
+      macdLine: macd.line.toFixed(6),
+      rsiVal: rsiVal.toFixed(1),
+    }
+  };
+}
+
+function judgeResult(r) {
+  if (!r.ema || !r.adx || !r.macd) return 'WAIT';
+  if (r.adx === 'bear') return 'WAIT';
+  // ADXがbull（トレンドあり）→ EMA/ATR/MACD/RSIの4指標のうち3つ以上でBUY/SELL
+  const keys = ['ema', 'macd', 'rsi'];
+  const bullScore = keys.filter(k => r[k] === 'bull').length + (r.atr === 'bull' ? 1 : 0);
+  const bearScore = keys.filter(k => r[k] === 'bear').length + (r.atr === 'bear' ? 1 : 0);
+  if (bullScore >= 3) return 'BUY';
+  if (bearScore >= 3) return 'SELL';
+  return 'WAIT';
+}
+
+function judge(p) {
+  return judgeResult(p);
+}
+
+// ====== PAIR MANAGEMENT ======
+function save() {
+  localStorage.setItem('tj2_pairs', JSON.stringify(pairs));
+  // ペアのsymbol一覧もURLハッシュに保存
+  updateHash({ pairs: pairs.map(p => p.symbol).join(',') });
+}
+
+function addPair() {
+  const sel = document.getElementById('pairSelect').value;
+  const custom = document.getElementById('customPair').value.trim().toUpperCase();
+  let symbol = custom || sel;
+  if (!symbol) return;
+  // normalize: USDJPY → USD/JPY
+  if (!symbol.includes('/') && symbol.length === 6) {
+    symbol = symbol.slice(0,3) + '/' + symbol.slice(3);
+  }
+  if (pairs.find(p => p.symbol === symbol)) { alert('すでに追加済みです'); return; }
+  const pair = { symbol, verdict: 'WAIT', ema: null, adx: null, atr: null, macd: null, updatedAt: null, error: null, open: false, raw: null };
+  pairs.push(pair);
+  document.getElementById('pairSelect').value = '';
+  document.getElementById('customPair').value = '';
+  save();
+  render();
+  fetchPair(symbol);
+}
+
+function removePair(symbol) {
+  pairs = pairs.filter(p => p.symbol !== symbol);
+  save(); render();
+}
+
+function removeAll() {
+  if (confirm('全ペアを削除しますか？')) { pairs = []; save(); render(); }
+}
+
+function toggleOpen(symbol) {
+  const p = pairs.find(p => p.symbol === symbol);
+  if (p) { p.open = !p.open; save(); render(); }
+}
+
+async function fetchPair(symbol) {
+  const p = pairs.find(p => p.symbol === symbol);
+  if (!p) return;
+  p.loading = true;
+  render();
+  try {
+    if (currentTF === 'mtf') {
+      // MTFモード: H1とH4を両方取得
+      const [r1, r4] = await Promise.all([
+        fetchAndAnalyze(symbol, '1h'),
+        (async () => { await new Promise(r => setTimeout(r, 400)); return fetchAndAnalyze(symbol, '4h'); })()
+      ]);
+      p.h1 = r1;
+      p.h4 = r4;
+      // 個別verdict
+      p.h1.verdict = judgeResult(r1);
+      p.h4.verdict = judgeResult(r4);
+      // MTF combined verdict: 両方一致のみBUY/SELL
+      if (p.h1.verdict === 'BUY'  && p.h4.verdict === 'BUY')  p.verdict = 'BUY';
+      else if (p.h1.verdict === 'SELL' && p.h4.verdict === 'SELL') p.verdict = 'SELL';
+      else p.verdict = 'WAIT';
+      // 単体表示用（カードチップ）はh1を使う
+      p.ema = r1.ema; p.adx = r1.adx; p.atr = r1.atr; p.macd = r1.macd;
+      p.raw = r1.raw;
+    } else {
+      const result = await fetchAndAnalyze(symbol, currentTF);
+      p.ema = result.ema; p.adx = result.adx;
+      p.atr = result.atr; p.macd = result.macd;
+      p.raw = result.raw;
+      p.verdict = judge(p);
+      p.h1 = null; p.h4 = null;
+    }
+    p.updatedAt = new Date().toLocaleTimeString('ja-JP', {hour:'2-digit',minute:'2-digit'});
+    p.error = null;
+  } catch(e) {
+    p.error = e.message;
+  }
+  p.loading = false;
+  save(); render();
+}
+
+async function refreshAll() {
+  if (!apiKey) { alert('APIキーを設定してください'); return; }
+  document.getElementById('refreshAllBtn').disabled = true;
+  for (const p of pairs) {
+    await fetchPair(p.symbol);
+    await new Promise(r => setTimeout(r, 300)); // rate limit spacing
+  }
+  document.getElementById('refreshAllBtn').disabled = false;
+  startAutoRefreshTimer();
+}
+
+// ====== AUTO REFRESH (15 min) ======
+function startAutoRefreshTimer() {
+  if (autoTimer) clearInterval(autoTimer);
+  nextRefreshSec = 15 * 60;
+  autoTimer = setInterval(() => {
+    nextRefreshSec--;
+    updateNextRefreshLabel();
+    if (nextRefreshSec <= 0) {
+      refreshAll();
+    }
+  }, 1000);
+  updateNextRefreshLabel();
+}
+
+function updateNextRefreshLabel() {
+  const m = Math.floor(nextRefreshSec / 60);
+  const s = nextRefreshSec % 60;
+  document.getElementById('nextRefreshLabel').textContent =
+    `次の自動更新まで ${m}:${String(s).padStart(2,'0')}`;
+}
+
+function chipHtml(value, labelBull, labelBear, labelNeutral) {
+  if (!value) return `<div class="ind-chip">--</div>`;
+  const label = value === 'bull' ? labelBull : (value === 'bear' ? labelBear : (labelNeutral || '--'));
+  return `<div class="ind-chip ${value}">${label}</div>`;
+}
+
+function chipsRowHtml(r) {
+  if (!r) return '<div class="ind-chip">--</div>';
+  const rsiLabel = r.raw ? `RSI ${parseFloat(r.raw.rsiVal).toFixed(0)}` : 'RSI';
+  return `
+    ${chipHtml(r.ema,  'EMA↑', 'EMA↓')}
+    ${chipHtml(r.adx,  'ADX↑', 'ADX↓')}
+    ${chipHtml(r.atr,  'ATR拡', 'ATR縮', 'ATR横')}
+    ${chipHtml(r.macd, 'MACD↑', 'MACD↓')}
+    ${chipHtml(r.rsi,  rsiLabel, rsiLabel)}
+  `;
+}
+
+function verdictPill(v, size) {
+  const sz = size === 'sm' ? 'font-size:11px;padding:2px 7px;' : '';
+  return `<span class="chip ${v.toLowerCase()}" style="${sz}">${v}</span>`;
+}
+
+function render() {
+  const list = document.getElementById('pairList');
+  let buyCount=0, sellCount=0, waitCount=0;
+  const isMtf = currentTF === 'mtf';
+
+  list.innerHTML = pairs.map(p => {
+    const v = p.verdict || 'WAIT';
+    if (!p.loading && !p.error) {
+      if (v === 'BUY') buyCount++;
+      else if (v === 'SELL') sellCount++;
+      else waitCount++;
+    }
+
+    const verdictHtml = p.loading
+      ? `<div class="verdict LOAD">…</div>`
+      : p.error
+        ? `<div class="verdict ERR">ERR</div>`
+        : `<div class="verdict ${v}">${v}</div>`;
+
+    // --- チップ表示 ---
+    let chipsHtml;
+    if (p.loading) {
+      chipsHtml = '<div class="ind-chip">読込中...</div>';
+    } else if (isMtf && p.h1 && p.h4) {
+      // MTFモード: H1とH4を2段で表示
+      chipsHtml = `
+        <div class="mtf-chips">
+          <div class="mtf-row">
+            <span class="mtf-row-label">H1</span>
+            ${chipsRowHtml(p.h1)}
+            <span style="font-family:var(--mono);font-size:10px;font-weight:700;margin-left:4px;color:${p.h1.verdict==='BUY'?'var(--buy)':p.h1.verdict==='SELL'?'var(--sell)':'var(--wait)'}">${p.h1.verdict}</span>
+          </div>
+          <div class="mtf-row">
+            <span class="mtf-row-label">H4</span>
+            ${chipsRowHtml(p.h4)}
+            <span style="font-family:var(--mono);font-size:10px;font-weight:700;margin-left:4px;color:${p.h4.verdict==='BUY'?'var(--buy)':p.h4.verdict==='SELL'?'var(--sell)':'var(--wait)'}">${p.h4.verdict}</span>
+          </div>
+        </div>`;
+    } else {
+      chipsHtml = chipsRowHtml(p);
+    }
+
+    // --- 詳細パネル ---
+    let detailHtml = '';
+    if (isMtf && p.h1 && p.h4) {
+      // MTF詳細: H1とH4を並べて表示
+      const agreeClass = v === 'BUY' ? 'agree-buy' : v === 'SELL' ? 'agree-sell' : 'agree-wait';
+      const agreeText = v === 'BUY'
+        ? '✦ H1 + H4 両方BUY — 高信頼シグナル'
+        : v === 'SELL'
+          ? '✦ H1 + H4 両方SELL — 高信頼シグナル'
+          : '⏸ H1 / H4 不一致 — エントリー見送り';
+      detailHtml = `
+        <div class="card-detail ${p.open ? 'visible' : ''}">
+          <div class="mtf-verdict-agree ${agreeClass}">${agreeText}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div>
+              <div class="detail-tf-header"><span class="tf-pill">H1 / 1時間足</span></div>
+              <div class="detail-grid">
+                <div class="detail-block">
+                  <div class="detail-label">EMA20 vs Price</div>
+                  <div class="detail-value ${p.h1.ema}">${p.h1.raw.price} vs ${p.h1.raw.ema20}</div>
+                </div>
+                <div class="detail-block">
+                  <div class="detail-label">ADX7</div>
+                  <div class="detail-value ${p.h1.adx}">${p.h1.raw.adxVal} ${p.h1.adx==='bull'?'(トレンド)':'(レンジ)'}</div>
+                </div>
+                <div class="detail-block">
+                  <div class="detail-label">ATR 傾き</div>
+                  <div class="detail-value ${p.h1.atr}">${p.h1.raw.atrVal} (${p.h1.raw.atrDiffPct}%)</div>
+                </div>
+                <div class="detail-block">
+                  <div class="detail-label">MACD Line</div>
+                  <div class="detail-value ${p.h1.macd}">${p.h1.raw.macdLine}</div>
+                </div>
+                <div class="detail-block">
+                  <div class="detail-label">RSI14</div>
+                  <div class="detail-value ${p.h1.rsi}">${p.h1.raw.rsiVal}
+                    <span style="font-size:10px;color:var(--dim);font-weight:400;">
+                      ${parseFloat(p.h1.raw.rsiVal) >= 70 ? '🔥過熱' : parseFloat(p.h1.raw.rsiVal) <= 30 ? '🧊売られすぎ' : parseFloat(p.h1.raw.rsiVal) >= 50 ? '(50↑)' : '(50↓)'}
+                    </span>
+                  </div>
+                  <div class="rsi-bar-wrap">
+                    <div class="rsi-bar-fill" style="width:${p.h1.raw.rsiVal}%;background:${parseFloat(p.h1.raw.rsiVal)>=70?'#ff4466':parseFloat(p.h1.raw.rsiVal)<=30?'#00aaff':parseFloat(p.h1.raw.rsiVal)>=50?'var(--bull)':'var(--bear)'}"></div>
+                    <div class="rsi-zone-line" style="left:50%"></div>
+                    <div class="rsi-zone-line" style="left:70%"></div>
+                    <div class="rsi-zone-line" style="left:30%"></div>
+                  </div>
+                </div>
+              <div class="detail-grid">
+                <div class="detail-block">
+                  <div class="detail-label">EMA20 vs Price</div>
+                  <div class="detail-value ${p.h4.ema}">${p.h4.raw.price} vs ${p.h4.raw.ema20}</div>
+                </div>
+                <div class="detail-block">
+                  <div class="detail-label">ADX7</div>
+                  <div class="detail-value ${p.h4.adx}">${p.h4.raw.adxVal} ${p.h4.adx==='bull'?'(トレンド)':'(レンジ)'}</div>
+                </div>
+                <div class="detail-block">
+                  <div class="detail-label">ATR 傾き</div>
+                  <div class="detail-value ${p.h4.atr}">${p.h4.raw.atrVal} (${p.h4.raw.atrDiffPct}%)</div>
+                </div>
+                <div class="detail-block">
+                  <div class="detail-label">MACD Line</div>
+                  <div class="detail-value ${p.h4.macd}">${p.h4.raw.macdLine}</div>
+                </div>
+                <div class="detail-block">
+                  <div class="detail-label">RSI14</div>
+                  <div class="detail-value ${p.h4.rsi}">${p.h4.raw.rsiVal}
+                    <span style="font-size:10px;color:var(--dim);font-weight:400;">
+                      ${parseFloat(p.h4.raw.rsiVal) >= 70 ? '🔥過熱' : parseFloat(p.h4.raw.rsiVal) <= 30 ? '🧊売られすぎ' : parseFloat(p.h4.raw.rsiVal) >= 50 ? '(50↑)' : '(50↓)'}
+                    </span>
+                  </div>
+                  <div class="rsi-bar-wrap">
+                    <div class="rsi-bar-fill" style="width:${p.h4.raw.rsiVal}%;background:${parseFloat(p.h4.raw.rsiVal)>=70?'#ff4466':parseFloat(p.h4.raw.rsiVal)<=30?'#00aaff':parseFloat(p.h4.raw.rsiVal)>=50?'var(--bull)':'var(--bear)'}"></div>
+                    <div class="rsi-zone-line" style="left:50%"></div>
+                    <div class="rsi-zone-line" style="left:70%"></div>
+                    <div class="rsi-zone-line" style="left:30%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          ${p.updatedAt ? `<div class="updated-at">更新: ${p.updatedAt}</div>` : ''}
+        </div>`;
+    } else if (p.raw) {
+      detailHtml = `
+        <div class="card-detail ${p.open ? 'visible' : ''}">
+          <div class="detail-grid">
+            <div class="detail-block">
+              <div class="detail-label">EMA20 vs Price</div>
+              <div class="detail-value ${p.ema}">${p.raw.price} vs ${p.raw.ema20}</div>
+            </div>
+            <div class="detail-block">
+              <div class="detail-label">ADX7</div>
+              <div class="detail-value ${p.adx}">${p.raw.adxVal} ${p.adx==='bull'?'(トレンド)':'(レンジ)'}</div>
+            </div>
+            <div class="detail-block">
+              <div class="detail-label">ATR 傾き</div>
+              <div class="detail-value ${p.atr}">${p.raw.atrVal} (${p.raw.atrDiffPct}%)</div>
+            </div>
+            <div class="detail-block">
+              <div class="detail-label">MACD Line</div>
+              <div class="detail-value ${p.macd}">${p.raw.macdLine}</div>
+            </div>
+            <div class="detail-block">
+              <div class="detail-label">RSI14</div>
+              <div class="detail-value ${p.rsi}">${p.raw.rsiVal}
+                <span style="font-size:10px;color:var(--dim);font-weight:400;">
+                  ${parseFloat(p.raw.rsiVal) >= 70 ? '🔥過熱' : parseFloat(p.raw.rsiVal) <= 30 ? '🧊売られすぎ' : parseFloat(p.raw.rsiVal) >= 50 ? '(50↑)' : '(50↓)'}
+                </span>
+              </div>
+              <div class="rsi-bar-wrap">
+                <div class="rsi-bar-fill" style="width:${p.raw.rsiVal}%;background:${parseFloat(p.raw.rsiVal)>=70?'#ff4466':parseFloat(p.raw.rsiVal)<=30?'#00aaff':parseFloat(p.raw.rsiVal)>=50?'var(--bull)':'var(--bear)'}"></div>
+                <div class="rsi-zone-line" style="left:50%"></div>
+                <div class="rsi-zone-line" style="left:70%"></div>
+                <div class="rsi-zone-line" style="left:30%"></div>
+              </div>
+            </div>
+          </div>
+          ${p.updatedAt ? `<div class="updated-at">更新: ${p.updatedAt}</div>` : ''}
+        </div>`;
+    }
+    if (p.error) {
+      detailHtml = `<div class="card-detail ${p.open ? 'visible' : ''}"><div class="error-msg">${p.error}</div></div>`;
+    }
+
+    return `
+    <div class="pair-card ${p.loading ? 'loading' : v}" id="card-${p.symbol.replace('/','_')}">
+      <div class="card-header" onclick="toggleOpen('${p.symbol}')">
+        <div class="pair-name">${p.symbol}</div>
+        <div class="inds-row">${chipsHtml}</div>
+        ${verdictHtml}
+        <button class="icon-btn ${p.loading ? 'spinning' : ''}" onclick="event.stopPropagation();fetchPair('${p.symbol}')" title="更新">↻</button>
+        <button class="icon-btn del" onclick="event.stopPropagation();removePair('${p.symbol}')" title="削除">×</button>
+      </div>
+      ${detailHtml}
+    </div>`;
+  }).join('');
+
+  document.getElementById('buyCount').textContent = buyCount;
+  document.getElementById('sellCount').textContent = sellCount;
+  document.getElementById('waitCount').textContent = waitCount;
+}
+
+// ====== CLOCK ======
+function updateClock() {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('ja-JP', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ====== MARKET STATUS ======
+function getMarketStatus() {
+  // FX市場: 月曜00:00 UTC ~ 金曜22:00 UTC (GMT+0基準)
+  // NZ市場オープン: 日曜21:00 UTC ≒ 月曜06:00 JST
+  const now = new Date();
+  const utcDay  = now.getUTCDay();   // 0=Sun, 1=Mon ... 6=Sat
+  const utcHour = now.getUTCHours();
+  const utcMin  = now.getUTCMinutes();
+  const utcTotal = utcDay * 24 * 60 + utcHour * 60 + utcMin; // minutes since Sun 00:00 UTC
+
+  // Open: Sun 21:00 UTC → Fri 22:00 UTC
+  const openMin  = 0 * 24 * 60 + 21 * 60;  // Sun 21:00
+  const closeMin = 5 * 24 * 60 + 22 * 60;  // Fri 22:00
+
+  const isOpen = utcTotal >= openMin || utcTotal < closeMin;
+  // より正確に: 土曜は完全クローズ
+  if (utcDay === 6) return { open: false, reason: '土曜日 — 市場クローズ中' };
+  if (utcDay === 0 && utcHour < 21) return { open: false, reason: '日曜日 — 市場クローズ中（21:00 UTC頃オープン）' };
+  if (utcDay === 5 && utcHour >= 22) return { open: false, reason: '金曜深夜 — 市場クローズ中' };
+
+  // 主要セッション
+  let session = '';
+  if (utcHour >= 21 || utcHour < 6)  session = 'NZ・東京セッション';
+  else if (utcHour >= 6 && utcHour < 8)  session = '東京セッション';
+  else if (utcHour >= 8 && utcHour < 16) session = 'ロンドンセッション';
+  else if (utcHour >= 13 && utcHour < 22) session = 'NYセッション';
+  if (utcHour >= 13 && utcHour < 16) session = 'ロンドン・NYオーバーラップ';
+
+  return { open: true, reason: '市場オープン中', session };
+}
+
+function renderMarketBanner() {
+  const status = getMarketStatus();
+  const banner = document.getElementById('marketBanner');
+  if (status.open) {
+    banner.innerHTML = `
+      <div class="market-banner open">
+        <div class="blink"></div>
+        <span>MARKET OPEN — ${status.session}</span>
+        <div class="mkt-detail">データは実勢値</div>
+      </div>`;
+  } else {
+    banner.innerHTML = `
+      <div class="market-banner closed">
+        <div class="blink"></div>
+        <span>MARKET CLOSED — ${status.reason}</span>
+        <div class="mkt-detail">⚠ 表示中のデータは金曜終値（参考値）</div>
+      </div>`;
+  }
+}
+
+// ====== INIT ======
+if (pairs.length === 0) {
+  ['XAU/USD','USD/JPY','EUR/JPY','GBP/JPY','EUR/USD','GBP/USD'].forEach(symbol => {
+    pairs.push({ symbol, verdict:'WAIT', ema:null, adx:null, atr:null, macd:null, updatedAt:null, error:null, open:false, raw:null, h1:null, h4:null });
+  });
+  save();
+}
+initKeyUI();
+if (apiKey) {
+  document.getElementById('bookmarkHint').style.display = 'block';
+  document.getElementById('bookmarkUrl').textContent = location.href;
+}
+updateTFBadge();
+updateLegend();
+renderMarketBanner();
+setInterval(renderMarketBanner, 60000);
+render();
+if (apiKey && pairs.length > 0) {
+  refreshAll();
+}
+</script>
+</body>
+</html>
