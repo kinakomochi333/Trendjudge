@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>通貨強弱ランキング LIVE</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+JP:wght@400;700&display=swap');
+
+  :root {
+    --bg: #0a0e14;
+    --panel: #111720;
+    --panel2: #141c26;
+    --border: #1e2d3d;
+    --green: #00ff9d;
+    --red: #ff4466;
+    --yellow: #ffd700;
+    --blue: #00aaff;
+    --text: #c8d8e8;
+    --dim: #4a5a6a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    padding: 14px;
+    background-image:
+      radial-gradient(ellipse at 20% 50%, rgba(0,255,157,0.03) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(0,170,255,0.03) 0%, transparent 60%);
+  }
+
+  /* ===== HEADER ===== */
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .title-block h1 {
+    font-size: 20px;
+    color: var(--green);
+    letter-spacing: 3px;
+  }
+
+  .title-block p {
+    font-size: 10px;
+    color: var(--dim);
+    letter-spacing: 2px;
+    margin-top: 2px;
+  }
+
+  .time-block { text-align: right; }
+  .time-block .clock { font-size: 20px; color: var(--text); display: block; }
+  .time-block .sub { font-size: 10px; color: var(--dim); }
+
+  /* ===== SESSION ===== */
+  .session {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,255,157,0.05);
+    border: 1px solid var(--green);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 11px;
+    color: var(--green);
+    margin-bottom: 14px;
+    letter-spacing: 2px;
+  }
+
+  .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: pulse 1.5s infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* ===== API KEY INPUT ===== */
+  .api-section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 14px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .api-section label {
+    font-size: 10px;
+    color: var(--dim);
+    letter-spacing: 2px;
+    flex-shrink: 0;
+  }
+
+  .api-section input {
+    flex: 1;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 10px;
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    min-width: 120px;
+  }
+
+  .api-section input:focus { outline: none; border-color: var(--blue); }
+
+  .btn {
+    background: var(--blue);
+    color: #000;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 14px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+  }
+
+  .btn:active { opacity: 0.8; }
+
+  .saved-label {
+    font-size: 10px;
+    color: var(--green);
+    flex-shrink: 0;
+  }
+
+  /* ===== STATUS ===== */
+  .status-bar {
+    font-size: 10px;
+    color: var(--dim);
+    text-align: center;
+    margin-bottom: 10px;
+    min-height: 14px;
+  }
+
+  .status-bar.loading { color: var(--yellow); }
+  .status-bar.error { color: var(--red); }
+  .status-bar.ok { color: var(--green); }
+
+  /* ===== SUMMARY ===== */
+  .summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .summary-item {
+    background: var(--panel);
+    border-radius: 8px;
+    padding: 10px 6px;
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+
+  .summary-item .val {
+    font-size: 28px;
+    font-weight: bold;
+    display: block;
+    line-height: 1;
+  }
+
+  .summary-item .lbl {
+    font-size: 9px;
+    color: var(--dim);
+    letter-spacing: 2px;
+    margin-top: 3px;
+  }
+
+  .buy-val { color: var(--green); text-shadow: 0 0 10px var(--green); }
+  .sell-val { color: var(--red); text-shadow: 0 0 10px var(--red); }
+  .wait-val { color: var(--yellow); text-shadow: 0 0 10px var(--yellow); }
+
+  /* ===== SECTION TITLE ===== */
+  .section-title {
+    font-size: 10px;
+    color: var(--dim);
+    letter-spacing: 3px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  /* ===== RANKING ===== */
+  .ranking { display: flex; flex-direction: column; gap: 7px; margin-bottom: 18px; }
+
+  .rank-item {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .rank-item::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+  }
+
+  .rank-item.strong::before { background: var(--green); }
+  .rank-item.mid::before { background: var(--yellow); }
+  .rank-item.weak::before { background: var(--red); }
+  .rank-item.neutral::before { background: var(--dim); }
+
+  .rank-num { font-size: 11px; color: var(--dim); width: 16px; text-align: center; flex-shrink: 0; }
+
+  .rank-currency { font-size: 18px; font-weight: bold; width: 44px; flex-shrink: 0; }
+  .rank-currency.strong { color: var(--green); }
+  .rank-currency.mid { color: var(--yellow); }
+  .rank-currency.weak { color: var(--red); }
+  .rank-currency.neutral { color: var(--dim); }
+
+  .rank-bar-wrap {
+    flex: 1;
+    height: 5px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .rank-bar { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
+  .rank-bar.strong { background: linear-gradient(90deg, var(--green), #00cc7a); }
+  .rank-bar.mid    { background: linear-gradient(90deg, var(--yellow), #ccaa00); }
+  .rank-bar.weak   { background: linear-gradient(90deg, var(--red), #cc2244); }
+  .rank-bar.neutral { background: var(--dim); }
+
+  .rank-score { font-size: 13px; width: 40px; text-align: right; flex-shrink: 0; }
+  .rank-score.strong { color: var(--green); }
+  .rank-score.mid    { color: var(--yellow); }
+  .rank-score.weak   { color: var(--red); }
+  .rank-score.neutral { color: var(--dim); }
+
+  /* ===== 乖離 TOP ===== */
+  .spread-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 18px; }
+
+  .spread-item {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .spread-rank-icon { font-size: 14px; width: 22px; flex-shrink: 0; }
+
+  .spread-pair { flex: 1; }
+  .spread-pair .pair-name { font-size: 14px; color: var(--text); }
+  .spread-pair .pair-sub { font-size: 10px; color: var(--dim); margin-top: 1px; }
+
+  .spread-badge {
+    font-size: 9px;
+    padding: 3px 7px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+  }
+
+  .badge-buy  { background: rgba(0,255,157,0.12); color: var(--green); border: 1px solid rgba(0,255,157,0.3); }
+  .badge-sell { background: rgba(255,68,102,0.12); color: var(--red);   border: 1px solid rgba(255,68,102,0.3); }
+  .badge-wait { background: rgba(255,215,0,0.1);   color: var(--yellow); border: 1px solid rgba(255,215,0,0.2); }
+
+  .spread-val { font-size: 13px; width: 36px; text-align: right; flex-shrink: 0; color: var(--green); }
+
+  /* ===== MATRIX ===== */
+  .matrix-wrap {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    overflow-x: auto;
+    margin-bottom: 18px;
+  }
+
+  .matrix-table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 9px;
+  }
+
+  .matrix-table th, .matrix-table td {
+    padding: 4px 2px;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .matrix-table th { color: var(--dim); letter-spacing: 1px; font-weight: normal; }
+
+  .cell-buy  { background: rgba(0,255,157,0.14); color: var(--green); border-radius: 3px; }
+  .cell-sell { background: rgba(255,68,102,0.14); color: var(--red);   border-radius: 3px; }
+  .cell-wait { background: rgba(255,215,0,0.1);   color: var(--yellow); border-radius: 3px; }
+  .cell-none { color: var(--dim); }
+  .cell-loading { color: var(--dim); }
+
+  .row-label { color: var(--text); text-align: left; padding-left: 4px; font-size: 10px; }
+
+  /* ===== PAIR LIST ===== */
+  .pair-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 18px; }
+
+  .pair-item {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+  }
+
+  .pair-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .pair-name { font-size: 14px; color: var(--text); }
+
+  .pair-signal {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+  }
+
+  .pair-indicators {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .ind-badge {
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    color: var(--dim);
+  }
+
+  .ind-up   { border-color: rgba(0,255,157,0.3); color: var(--green); background: rgba(0,255,157,0.06); }
+  .ind-down { border-color: rgba(255,68,102,0.3); color: var(--red);   background: rgba(255,68,102,0.06); }
+  .ind-mid  { border-color: rgba(255,215,0,0.3);  color: var(--yellow); background: rgba(255,215,0,0.06); }
+
+  /* ===== UPDATE BTN ===== */
+  .update-section {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    align-items: center;
+  }
+
+  .btn-update {
+    background: transparent;
+    border: 1px solid var(--green);
+    color: var(--green);
+    border-radius: 6px;
+    padding: 8px 20px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    letter-spacing: 2px;
+  }
+
+  .btn-update:active { background: rgba(0,255,157,0.1); }
+
+  .auto-label { font-size: 10px; color: var(--dim); }
+
+  .loading-spinner {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border: 2px solid var(--border);
+    border-top-color: var(--green);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title-block">
+    <h1>STRENGTH RANK</h1>
+    <p>CURRENCY POWER · REALTIME</p>
+  </div>
+  <div class="time-block">
+    <span class="clock" id="clock">--:--:--</span>
+    <span class="sub" id="session-label">セッション取得中</span>
+  </div>
+</header>
+
+<div class="session" id="session-badge">
+  <div class="dot"></div>
+  <span id="session-text">起動中...</span>
+</div>
+
+<div class="api-section">
+  <label>API KEY</label>
+  <input type="password" id="api-key-input" placeholder="Twelve Data または Alpha Vantage キーを入力" />
+  <button class="btn" onclick="saveAndLoad()">保存</button>
+  <span class="saved-label" id="save-label" style="display:none">✓ 保存済み</span>
+</div>
+
+<div class="status-bar" id="status-bar">APIキーを入力してください</div>
+
+<div class="update-section">
+  <button class="btn-update" onclick="loadAll()">⟳ 更新</button>
+  <span class="auto-label" id="next-update">--</span>
+</div>
+
+<div class="summary">
+  <div class="summary-item">
+    <span class="val buy-val" id="sum-buy">-</span>
+    <span class="lbl">BUY</span>
+  </div>
+  <div class="summary-item">
+    <span class="val sell-val" id="sum-sell">-</span>
+    <span class="lbl">SELL</span>
+  </div>
+  <div class="summary-item">
+    <span class="val wait-val" id="sum-wait">-</span>
+    <span class="lbl">WAIT</span>
+  </div>
+</div>
+
+<div class="section-title">◆ 通貨強弱ランキング</div>
+<div class="ranking" id="ranking-list">
+  <div style="color:var(--dim);font-size:11px;text-align:center;padding:12px">データ待機中...</div>
+</div>
+
+<div class="section-title">◆ 乖離Top3（狙い目ペア）</div>
+<div class="spread-list" id="spread-list">
+  <div style="color:var(--dim);font-size:11px;text-align:center;padding:12px">データ待機中...</div>
+</div>
+
+<div class="section-title">◆ ペア別シグナル</div>
+<div class="pair-list" id="pair-list">
+  <div style="color:var(--dim);font-size:11px;text-align:center;padding:12px">データ待機中...</div>
+</div>
+
+<div class="section-title">◆ 強弱マトリクス</div>
+<div class="matrix-wrap" id="matrix-wrap">
+  <div style="color:var(--dim);font-size:11px;text-align:center;padding:12px">データ待機中...</div>
+</div>
+
+<script>
+// ===================================================
+// 設定
+// ===================================================
+const PAIRS = ['XAU/USD','USD/JPY','EUR/USD','GBP/USD','EUR/JPY','GBP/JPY'];
+const CURRENCIES = ['XAU','USD','EUR','GBP','JPY'];
+const PAIR_MAP = {
+  'XAU/USD': ['XAU','USD'],
+  'USD/JPY': ['USD','JPY'],
+  'EUR/USD': ['EUR','USD'],
+  'GBP/USD': ['GBP','USD'],
+  'EUR/JPY': ['EUR','JPY'],
+  'GBP/JPY': ['GBP','JPY'],
+};
+
+let apiKey = '';
+let pairData = {}; // { 'EUR/USD': { signal:'BUY', score:8, ema:'↑', macd:'↑', rsi:62, atr:'拡' } }
+let autoTimer = null;
+let countdown = 60;
+
+// ===================================================
+// 初期化
+// ===================================================
+window.onload = () => {
+  tick();
+  setInterval(tick, 1000);
+
+  // URLパラメータからキー読む
+  const params = new URLSearchParams(location.hash.replace('#','?') || location.search);
+  const urlKey = params.get('key');
+  if (urlKey) {
+    apiKey = urlKey;
+    document.getElementById('api-key-input').value = urlKey;
+    document.getElementById('save-label').style.display = 'inline';
+    loadAll();
+  }
+
+  // localStorageから読む
+  const saved = localStorage.getItem('cs_api_key');
+  if (!apiKey && saved) {
+    apiKey = saved;
+    document.getElementById('api-key-input').value = saved;
+    document.getElementById('save-label').style.display = 'inline';
+    loadAll();
+  }
+};
+
+function saveAndLoad() {
+  apiKey = document.getElementById('api-key-input').value.trim();
+  if (!apiKey) { setStatus('APIキーを入力してください', 'error'); return; }
+  localStorage.setItem('cs_api_key', apiKey);
+  document.getElementById('save-label').style.display = 'inline';
+  loadAll();
+}
+
+// ===================================================
+// セッション判定
+// ===================================================
+function getSession() {
+  const h = new Date().getUTCHours();
+  if (h >= 0 && h < 7) return 'アジアセッション';
+  if (h >= 7 && h < 16) return 'ロンドンセッション';
+  return 'NYセッション';
+}
+
+function tick() {
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  document.getElementById('clock').textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  document.getElementById('session-label').textContent = getSession();
+  document.getElementById('session-text').textContent = `MARKET OPEN — ${getSession()}`;
+}
+
+// ===================================================
+// データ取得 (Twelve Data API)
+// ===================================================
+async function fetchPairData(pair) {
+  const symbol = pair.replace('/', '/');
+  // Twelve Dataはスラッシュそのまま使える: XAU/USD, EUR/USD など
+  const url = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(symbol)}&interval=1h&outputsize=50&apikey=${apiKey}`;
+
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  const json = await r.json();
+  if (json.status === 'error') throw new Error(json.message || 'API Error');
+  if (!json.values || json.values.length < 30) throw new Error('データ不足');
+  return json.values.map(v => ({
+    open:  parseFloat(v.open),
+    high:  parseFloat(v.high),
+    low:   parseFloat(v.low),
+    close: parseFloat(v.close),
+    datetime: v.datetime
+  })).reverse(); // 古い順
+}
+
+// ===================================================
+// テクニカル計算
+// ===================================================
+function calcEMA(closes, period) {
+  const k = 2 / (period + 1);
+  let ema = closes[0];
+  for (let i = 1; i < closes.length; i++) {
+    ema = closes[i] * k + ema * (1 - k);
+  }
+  return ema;
+}
+
+function calcPrevEMA(closes, period) {
+  const k = 2 / (period + 1);
+  let ema = closes[0];
+  for (let i = 1; i < closes.length - 1; i++) {
+    ema = closes[i] * k + ema * (1 - k);
+  }
+  return ema;
+}
+
+function calcRSI(closes, period = 14) {
+  if (closes.length < period + 1) return 50;
+  let gains = 0, losses = 0;
+  for (let i = closes.length - period; i < closes.length; i++) {
+    const diff = closes[i] - closes[i - 1];
+    if (diff > 0) gains += diff; else losses -= diff;
+  }
+  if (losses === 0) return 100;
+  const rs = (gains / period) / (losses / period);
+  return Math.round(100 - 100 / (1 + rs));
+}
+
+function calcATR(candles, period = 14) {
+  const trs = [];
+  for (let i = 1; i < candles.length; i++) {
+    const tr = Math.max(
+      candles[i].high - candles[i].low,
+      Math.abs(candles[i].high - candles[i - 1].close),
+      Math.abs(candles[i].low - candles[i - 1].close)
+    );
+    trs.push(tr);
+  }
+  const recent = trs.slice(-period);
+  const old = trs.slice(-period * 2, -period);
+  const atrNow = recent.reduce((a, b) => a + b, 0) / recent.length;
+  const atrOld = old.length > 0 ? old.reduce((a, b) => a + b, 0) / old.length : atrNow;
+  if (atrNow > atrOld * 1.05) return '拡';
+  if (atrNow < atrOld * 0.95) return '縮';
+  return '横';
+}
+
+function calcMACD(closes) {
+  // MACD 8/21（シグナルなし）
+  const ema8  = calcEMA(closes, 8);
+  const ema21 = calcEMA(closes, 21);
+  const prevEma8  = calcPrevEMA(closes, 8);
+  const prevEma21 = calcPrevEMA(closes, 21);
+  const macd     = ema8  - ema21;
+  const prevMacd = prevEma8 - prevEma21;
+  return macd > prevMacd ? '↑' : '↓';
+}
+
+function calcADX(highs, lows, closes, period = 7) {
+  // ADX + +DI/-DI (Wilderスムージング)
+  const plusDM = [], minusDM = [], tr = [];
+  for (let i = 1; i < highs.length; i++) {
+    const upMove   = highs[i] - highs[i - 1];
+    const downMove = lows[i - 1] - lows[i];
+    plusDM.push(upMove > downMove && upMove > 0 ? upMove : 0);
+    minusDM.push(downMove > upMove && downMove > 0 ? downMove : 0);
+    tr.push(Math.max(
+      highs[i] - lows[i],
+      Math.abs(highs[i] - closes[i - 1]),
+      Math.abs(lows[i] - closes[i - 1])
+    ));
+  }
+  function wilderSmooth(arr, p) {
+    let sum = arr.slice(0, p).reduce((a, b) => a + b, 0);
+    const out = [sum];
+    for (let i = p; i < arr.length; i++) {
+      sum = sum - sum / p + arr[i];
+      out.push(sum);
+    }
+    return out;
+  }
+  const sTR  = wilderSmooth(tr, period);
+  const sPDM = wilderSmooth(plusDM, period);
+  const sMDM = wilderSmooth(minusDM, period);
+  const dx = sTR.map((t, i) => {
+    if (t === 0) return 0;
+    const pDI = 100 * sPDM[i] / t;
+    const mDI = 100 * sMDM[i] / t;
+    return 100 * Math.abs(pDI - mDI) / (pDI + mDI || 1);
+  });
+  const adxArr = wilderSmooth(dx, period);
+  const last   = sTR.length - 1;
+  const plusDI  = sTR[last] === 0 ? 0 : 100 * sPDM[last] / sTR[last];
+  const minusDI = sTR[last] === 0 ? 0 : 100 * sMDM[last] / sTR[last];
+  return {
+    adx: adxArr[adxArr.length - 1],
+    plusDI,
+    minusDI,
+    trending: adxArr[adxArr.length - 1] >= 25
+  };
+}
+
+function analyzeCandles(candles) {
+  const closes = candles.map(c => c.close);
+  const highs  = candles.map(c => c.high);
+  const lows   = candles.map(c => c.low);
+
+  const ema20     = calcEMA(closes, 20);
+  const prevEma20 = calcPrevEMA(closes, 20);
+  const emaDir    = closes[closes.length - 1] > ema20 ? '↑' : '↓';
+  const emaTrend  = ema20 > prevEma20 ? '↑' : '↓';
+
+  const rsi      = calcRSI(closes, 14);
+  const macdDir  = calcMACD(closes);
+  const atrState = calcATR(candles, 14);
+
+  // ADX7 + +DI/-DI
+  const adxResult = calcADX(highs, lows, closes, 7);
+  const adxTrending = adxResult.trending;
+  const adxDir = adxTrending
+    ? (adxResult.plusDI > adxResult.minusDI ? '↑' : '↓')
+    : '−';
+
+  // スコア計算（ADXがレンジならスコア0でWAIT寄り）
+  let score = 0;
+  if (adxTrending) {
+    if (emaDir === '↑') score += 2; else score -= 2;
+    if (macdDir === '↑') score += 1; else score -= 1;
+    if (rsi > 55) score += 1; else if (rsi < 45) score -= 1;
+    if (emaTrend === '↑') score += 0.5; else score -= 0.5;
+    // +DI/-DIの方向一致でボーナス
+    if (adxResult.plusDI > adxResult.minusDI) score += 0.5;
+    else score -= 0.5;
+  }
+
+  let signal = 'WAIT';
+  if (adxTrending && score >= 2.5) signal = 'BUY';
+  else if (adxTrending && score <= -2.5) signal = 'SELL';
+
+  return {
+    signal,
+    score,
+    ema: emaDir,
+    macd: macdDir,
+    rsi,
+    atr: atrState,
+    adx: adxDir,
+    adxVal: adxResult.adx.toFixed(1),
+    plusDI: adxResult.plusDI.toFixed(1),
+    minusDI: adxResult.minusDI.toFixed(1),
+    adxTrending,
+    close: closes[closes.length - 1]
+  };
+}
+
+// ===================================================
+// メイン: 全ペア取得 & 分析
+// ===================================================
+async function loadAll() {
+  if (!apiKey) { setStatus('APIキーを入力してください', 'error'); return; }
+
+  setStatus('<span class="loading-spinner"></span>データ取得中...', 'loading');
+  pairData = {};
+
+  let success = 0;
+  let fail = 0;
+
+  for (const pair of PAIRS) {
+    try {
+      // Rate limit対策: 少し間隔を空ける
+      if (success + fail > 0) await sleep(250);
+      const candles = await fetchPairData(pair);
+      pairData[pair] = analyzeCandles(candles);
+      success++;
+    } catch (e) {
+      console.error(pair, e.message);
+      pairData[pair] = { signal: 'ERR', score: 0, ema: '--', macd: '--', rsi: '--', atr: '--', error: e.message };
+      fail++;
+    }
+  }
+
+  if (success === 0) {
+    setStatus('全ペアエラー。APIキーを確認してください。', 'error');
+  } else if (fail > 0) {
+    setStatus(`✓ ${success}ペア取得成功 / ${fail}ペアエラー`, 'loading');
+  } else {
+    setStatus(`✓ 全${success}ペア取得成功 — ${new Date().toLocaleTimeString('ja-JP')}`, 'ok');
+  }
+
+  renderAll();
+  startCountdown();
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function setStatus(msg, cls = '') {
+  const el = document.getElementById('status-bar');
+  el.innerHTML = msg;
+  el.className = 'status-bar ' + cls;
+}
+
+// ===================================================
+// カウントダウン (60秒自動更新)
+// ===================================================
+function startCountdown() {
+  if (autoTimer) clearInterval(autoTimer);
+  countdown = 60;
+  autoTimer = setInterval(() => {
+    countdown--;
+    document.getElementById('next-update').textContent = `次の自動更新: ${countdown}秒後`;
+    if (countdown <= 0) {
+      clearInterval(autoTimer);
+      loadAll();
+    }
+  }, 1000);
+}
+
+// ===================================================
+// 通貨スコア計算
+// ===================================================
+function calcCurrencyScores() {
+  const scores = {};
+  CURRENCIES.forEach(c => scores[c] = 0);
+
+  for (const pair of PAIRS) {
+    const d = pairData[pair];
+    if (!d || d.signal === 'ERR') continue;
+
+    const [base, quote] = PAIR_MAP[pair];
+    const s = d.score;
+    if (base in scores) scores[base] += s;
+    if (quote in scores) scores[quote] -= s;
+  }
+
+  return scores;
+}
+
+function getClass(score) {
+  if (score > 1.5) return 'strong';
+  if (score < -1.5) return 'weak';
+  if (score >= 0) return 'mid';
+  return 'mid';
+}
+
+// ===================================================
+// 描画
+// ===================================================
+function renderAll() {
+  const scores = calcCurrencyScores();
+
+  // サマリー
+  let buyCnt = 0, sellCnt = 0, waitCnt = 0;
+  PAIRS.forEach(p => {
+    const d = pairData[p];
+    if (!d || d.signal === 'ERR') return;
+    if (d.signal === 'BUY') buyCnt++;
+    else if (d.signal === 'SELL') sellCnt++;
+    else waitCnt++;
+  });
+  document.getElementById('sum-buy').textContent = buyCnt;
+  document.getElementById('sum-sell').textContent = sellCnt;
+  document.getElementById('sum-wait').textContent = waitCnt;
+
+  renderRanking(scores);
+  renderSpread(scores);
+  renderPairList();
+  renderMatrix();
+}
+
+function renderRanking(scores) {
+  const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+  const maxAbs = Math.max(...Object.values(scores).map(Math.abs)) || 1;
+
+  const html = sorted.map(([cur, score], i) => {
+    const cls = getClass(score);
+    const barW = Math.round(Math.abs(score) / maxAbs * 100);
+    const scoreFmt = (score >= 0 ? '+' : '') + score.toFixed(1);
+    return `
+      <div class="rank-item ${cls}">
+        <span class="rank-num">${i + 1}</span>
+        <span class="rank-currency ${cls}">${cur}</span>
+        <div class="rank-bar-wrap">
+          <div class="rank-bar ${cls}" style="width:${barW}%"></div>
+        </div>
+        <span class="rank-score ${cls}">${scoreFmt}</span>
+      </div>`;
+  }).join('');
+
+  document.getElementById('ranking-list').innerHTML = html || '<div style="color:var(--dim);text-align:center;padding:12px;font-size:11px">データなし</div>';
+}
+
+function renderSpread(scores) {
+  // 全ペアの乖離スコアを計算
+  const spreads = [];
+  PAIRS.forEach(pair => {
+    const d = pairData[pair];
+    if (!d || d.signal === 'ERR') return;
+    const [base, quote] = PAIR_MAP[pair];
+    const spread = (scores[base] || 0) - (scores[quote] || 0);
+    spreads.push({ pair, spread: Math.abs(spread), signal: d.signal, base, quote });
+  });
+
+  spreads.sort((a, b) => b.spread - a.spread);
+  const top = spreads.slice(0, 3);
+
+  const icons = ['🥇', '🥈', '🥉'];
+
+  const html = top.map(({ pair, spread, signal }, i) => {
+    const badgeCls = signal === 'BUY' ? 'badge-buy' : signal === 'SELL' ? 'badge-sell' : 'badge-wait';
+    return `
+      <div class="spread-item">
+        <div class="spread-rank-icon">${icons[i]}</div>
+        <div class="spread-pair">
+          <div class="pair-name">${pair}</div>
+          <div class="pair-sub">乖離スコア ${spread.toFixed(1)}</div>
+        </div>
+        <span class="spread-badge ${badgeCls}">${signal}</span>
+        <span class="spread-val">+${spread.toFixed(1)}</span>
+      </div>`;
+  }).join('');
+
+  document.getElementById('spread-list').innerHTML = html || '<div style="color:var(--dim);text-align:center;padding:12px;font-size:11px">データなし</div>';
+}
+
+function renderPairList() {
+  const html = PAIRS.map(pair => {
+    const d = pairData[pair];
+    if (!d) return '';
+
+    if (d.signal === 'ERR') {
+      return `<div class="pair-item">
+        <div class="pair-header">
+          <span class="pair-name">${pair}</span>
+          <span class="pair-signal" style="background:rgba(255,68,102,0.15);color:var(--red);border:1px solid rgba(255,68,102,0.3);border-radius:4px;padding:2px 8px;font-size:11px">ERR</span>
+        </div>
+        <div style="font-size:9px;color:var(--dim)">${d.error || ''}</div>
+      </div>`;
+    }
+
+    const signalStyle = d.signal === 'BUY'
+      ? 'background:rgba(0,255,157,0.12);color:var(--green);border:1px solid rgba(0,255,157,0.3);'
+      : d.signal === 'SELL'
+      ? 'background:rgba(255,68,102,0.12);color:var(--red);border:1px solid rgba(255,68,102,0.3);'
+      : 'background:rgba(255,215,0,0.1);color:var(--yellow);border:1px solid rgba(255,215,0,0.2);';
+
+    const emaCls  = d.ema === '↑' ? 'ind-up' : 'ind-down';
+    const macdCls = d.macd === '↑' ? 'ind-up' : 'ind-down';
+    const rsiCls  = d.rsi > 60 ? 'ind-up' : d.rsi < 40 ? 'ind-down' : 'ind-mid';
+    const atrCls  = d.atr === '拡' ? 'ind-up' : d.atr === '縮' ? 'ind-down' : 'ind-mid';
+    const adxCls  = !d.adxTrending ? 'ind-mid' : (d.adx === '↑' ? 'ind-up' : 'ind-down');
+    const adxLabel = !d.adxTrending
+      ? `ADX${d.adxVal||'--'}レンジ`
+      : `ADX${d.adxVal} ${d.adx===('↑')?'+DI':'-DI'}`;
+
+    return `<div class="pair-item">
+      <div class="pair-header">
+        <span class="pair-name">${pair}</span>
+        <span class="pair-signal" style="${signalStyle}border-radius:4px;padding:2px 8px;font-size:11px;letter-spacing:1px">${d.signal}</span>
+      </div>
+      <div class="pair-indicators">
+        <span class="ind-badge ${emaCls}">EMA ${d.ema}</span>
+        <span class="ind-badge ${adxCls}">${adxLabel}</span>
+        <span class="ind-badge ${macdCls}">MACD(8/21) ${d.macd}</span>
+        <span class="ind-badge ${rsiCls}">RSI ${d.rsi}</span>
+        <span class="ind-badge ${atrCls}">ATR${d.atr}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('pair-list').innerHTML = html || '<div style="color:var(--dim);text-align:center;padding:12px;font-size:11px">データなし</div>';
+}
+
+function renderMatrix() {
+  const cols = CURRENCIES;
+  const rows = CURRENCIES;
+
+  let thead = '<tr><th></th>' + cols.map(c => `<th>${c}</th>`).join('') + '</tr>';
+  let tbody = '';
+
+  rows.forEach(rowCur => {
+    let row = `<tr><td class="row-label">${rowCur}</td>`;
+    cols.forEach(colCur => {
+      if (rowCur === colCur) {
+        row += `<td class="cell-none">—</td>`;
+        return;
+      }
+
+      // rowCur / colCur のシグナルを探す
+      const pair = Object.keys(PAIR_MAP).find(p => {
+        const [b, q] = PAIR_MAP[p];
+        return b === rowCur && q === colCur;
+      });
+      const rpair = Object.keys(PAIR_MAP).find(p => {
+        const [b, q] = PAIR_MAP[p];
+        return b === colCur && q === rowCur;
+      });
+
+      let sig = '??';
+      let cls = 'cell-loading';
+
+      if (pair && pairData[pair] && pairData[pair].signal !== 'ERR') {
+        sig = pairData[pair].signal;
+        cls = sig === 'BUY' ? 'cell-buy' : sig === 'SELL' ? 'cell-sell' : 'cell-wait';
+      } else if (rpair && pairData[rpair] && pairData[rpair].signal !== 'ERR') {
+        const s = pairData[rpair].signal;
+        sig = s === 'BUY' ? 'SELL' : s === 'SELL' ? 'BUY' : 'WAIT';
+        cls = sig === 'BUY' ? 'cell-buy' : sig === 'SELL' ? 'cell-sell' : 'cell-wait';
+      } else {
+        sig = '–';
+        cls = 'cell-none';
+      }
+
+      row += `<td class="${cls}" style="padding:4px 3px;font-size:8px;">${sig}</td>`;
+    });
+    row += '</tr>';
+    tbody += row;
+  });
+
+  document.getElementById('matrix-wrap').innerHTML = `
+    <table class="matrix-table">
+      <thead>${thead}</thead>
+      <tbody>${tbody}</tbody>
+    </table>
+    <div style="margin-top:8px;font-size:9px;color:var(--dim)">行=基軸通貨 / 列=クォート通貨</div>
+  `;
+}
+</script>
+</body>
+</html>

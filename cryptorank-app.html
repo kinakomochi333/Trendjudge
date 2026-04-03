@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRYPTO RANK · Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05070d;--bg2:#0a0e1a;--bg3:#0f1422;
+  --border:rgba(255,255,255,0.06);--border-hi:rgba(255,255,255,0.13);
+  --green:#00f5a0;--blue:#00c8ff;--red:#ff3b5c;--gold:#ffc94d;--purple:#b57aff;
+  --text:#e8edf5;--muted:#4a5568;--mono:'Space Mono',monospace;--disp:'Syne',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(0,245,160,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,245,160,.02) 1px,transparent 1px);
+  background-size:48px 48px;pointer-events:none;z-index:0;}
+.orb1{position:fixed;top:-180px;left:-180px;width:500px;height:500px;background:radial-gradient(circle,rgba(0,245,160,.05) 0%,transparent 70%);pointer-events:none;z-index:0;}
+.orb2{position:fixed;bottom:-150px;right:-100px;width:420px;height:420px;background:radial-gradient(circle,rgba(181,122,255,.05) 0%,transparent 70%);pointer-events:none;z-index:0;}
+.scanline{position:fixed;top:0;left:0;right:0;height:2px;background:linear-gradient(transparent,rgba(0,245,160,.07),transparent);animation:scan 5s linear infinite;pointer-events:none;z-index:1;}
+@keyframes scan{from{transform:translateY(-2px)}to{transform:translateY(100vh)}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* HEADER */
+header{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;
+  padding:16px 24px;border-bottom:1px solid var(--border);background:rgba(5,7,13,.92);backdrop-filter:blur(24px);}
+.logo{display:flex;align-items:center;gap:12px;}
+.logo-icon{width:38px;height:38px;border-radius:9px;background:linear-gradient(135deg,var(--green),var(--blue));
+  display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 0 20px rgba(0,245,160,.3);}
+.logo-name{font-family:var(--disp);font-weight:800;font-size:18px;letter-spacing:-.5px;}
+.logo-name em{color:var(--green);font-style:normal;}
+.logo-sub{font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:1px;}
+.hdr-r{display:flex;align-items:center;gap:14px;}
+.live-badge{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:100px;
+  background:rgba(0,245,160,.08);border:1px solid rgba(0,245,160,.2);font-size:10px;letter-spacing:2px;color:var(--green);}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);animation:pulse 1.5s ease-in-out infinite;}
+#clock{font-size:11px;color:var(--muted);}
+
+/* CONTROLS */
+.controls{position:relative;z-index:10;display:flex;align-items:center;gap:10px;
+  padding:9px 24px;background:var(--bg2);border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.ctrl-label{font-size:9px;letter-spacing:2px;color:var(--muted);}
+select{background:var(--bg3);border:1px solid var(--border);border-radius:5px;color:var(--text);
+  padding:6px 10px;font-family:var(--mono);font-size:10px;cursor:pointer;outline:none;}
+select:focus{border-color:var(--green);}
+.btn{padding:7px 16px;border:none;border-radius:5px;font-family:var(--mono);font-size:10px;
+  letter-spacing:1px;cursor:pointer;transition:all .2s;}
+.btn-primary{background:linear-gradient(135deg,var(--green),var(--blue));color:#000;font-weight:700;}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,245,160,.3);}
+#last-update{font-size:9px;color:var(--muted);margin-left:auto;}
+
+/* MAIN */
+main{position:relative;z-index:5;padding:20px 24px 80px;
+  display:grid;grid-template-columns:1fr 300px;gap:16px;max-width:1300px;margin:0 auto;}
+
+/* SUMMARY */
+.summary-row{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.sum-card{background:var(--bg2);border:1px solid var(--border);border-radius:11px;
+  padding:16px 18px;position:relative;overflow:hidden;transition:border-color .3s;}
+.sum-card:hover{border-color:var(--border-hi);}
+.sum-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.c-green::before{background:var(--green);}
+.c-blue::before{background:var(--blue);}
+.c-gold::before{background:var(--gold);}
+.c-purple::before{background:var(--purple);}
+.sum-lbl{font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:6px;}
+.sum-val{font-family:var(--disp);font-size:28px;font-weight:800;line-height:1;}
+.c-green .sum-val{color:var(--green);}
+.c-blue  .sum-val{color:var(--blue);}
+.c-gold  .sum-val{color:var(--gold);}
+.c-purple .sum-val{color:var(--purple);}
+.sum-sub{font-size:10px;color:var(--muted);margin-top:3px;}
+
+/* PANEL */
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.panel-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);}
+.panel-title{font-family:var(--disp);font-size:12px;font-weight:700;letter-spacing:.5px;display:flex;align-items:center;gap:8px;}
+.panel-title::before{content:'';display:inline-block;width:5px;height:5px;background:var(--green);border-radius:50%;box-shadow:0 0 7px var(--green);}
+.panel-body{padding:14px;}
+
+/* RANK CARDS */
+.rank-list{display:flex;flex-direction:column;gap:7px;}
+.rank-card{display:grid;grid-template-columns:28px 38px 50px 1fr 80px 70px 65px;
+  align-items:center;gap:10px;padding:11px 14px;background:var(--bg3);
+  border:1px solid transparent;border-radius:9px;transition:all .2s;animation:fadeUp .35s ease both;cursor:default;}
+.rank-card:hover{border-color:var(--border-hi);background:rgba(255,255,255,.02);transform:translateX(2px);}
+.rank-num{font-size:11px;color:var(--muted);text-align:center;}
+.rank-num.top1{color:var(--gold);font-weight:700;font-size:13px;}
+.rank-num.top2{color:#c0c0c0;font-weight:700;}
+.rank-num.top3{color:#cd7f32;font-weight:700;}
+.coin-img{width:34px;height:34px;border-radius:50%;object-fit:cover;background:var(--bg2);border:1px solid var(--border);}
+.coin-sym{font-family:var(--disp);font-weight:700;font-size:13px;}
+.coin-name{font-size:9px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bar-wrap{display:flex;flex-direction:column;gap:5px;}
+.bar-bg{height:3px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:2px;transition:width .8s cubic-bezier(.4,0,.2,1);}
+.pill{display:inline-flex;padding:2px 8px;border-radius:100px;font-size:9px;font-weight:700;letter-spacing:.5px;}
+.pill-strong{background:rgba(0,245,160,.1);color:var(--green);border:1px solid rgba(0,245,160,.2);}
+.pill-buy{background:rgba(0,200,255,.1);color:var(--blue);border:1px solid rgba(0,200,255,.2);}
+.pill-watch{background:rgba(255,201,77,.08);color:var(--gold);border:1px solid rgba(255,201,77,.15);}
+.rank-score{font-size:15px;font-weight:700;text-align:right;}
+.rank-price{font-size:11px;color:var(--muted);text-align:right;}
+.rank-chg{font-size:12px;font-weight:700;text-align:right;}
+.rank-chg.up{color:var(--green);}
+.rank-chg.dn{color:var(--red);}
+
+/* SIDEBAR */
+.sidebar{display:flex;flex-direction:column;gap:14px;}
+.mini-list{display:flex;flex-direction:column;gap:5px;}
+.mini-item{display:flex;align-items:center;gap:8px;padding:9px 11px;
+  background:var(--bg3);border-radius:7px;border:1px solid transparent;transition:all .2s;animation:fadeUp .35s ease both;}
+.mini-item:hover{border-color:var(--border-hi);}
+.mini-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.mini-sym{font-family:var(--disp);font-weight:700;font-size:12px;flex:1;}
+.mini-chg{font-size:10px;font-weight:700;text-align:right;min-width:48px;}
+
+/* METHOD BOX */
+.method-box{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;}
+.method-lbl{font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:8px;}
+.method-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:10px;}
+.method-row:last-child{border:none;}
+.method-key{color:var(--muted);}
+.method-val{color:var(--green);font-weight:700;}
+
+/* DISCLAIMER */
+.disclaimer{position:relative;z-index:5;max-width:1300px;margin:0 auto;padding:0 24px 90px;}
+.dis-box{background:rgba(26,10,13,.8);border:1px solid rgba(255,59,92,.15);border-radius:9px;
+  padding:12px 18px;display:flex;align-items:flex-start;gap:10px;}
+.dis-icon{color:var(--red);font-size:14px;flex-shrink:0;margin-top:1px;}
+.dis-text{font-size:9px;color:var(--muted);line-height:1.7;}
+.dis-text b{color:#718096;}
+
+/* STATUSBAR */
+.statusbar{position:fixed;bottom:0;left:0;right:0;z-index:100;display:flex;align-items:center;gap:16px;
+  padding:8px 24px;background:rgba(5,7,13,.95);border-top:1px solid var(--border);
+  backdrop-filter:blur(20px);font-size:9px;letter-spacing:1.5px;color:var(--muted);}
+.sb-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 2s ease-in-out infinite;}
+#status{color:var(--text);}
+.sb-spacer{flex:1;}
+
+@media(max-width:800px){
+  main{grid-template-columns:1fr;padding:14px 14px 80px;}
+  .summary-row{grid-template-columns:repeat(2,1fr);}
+  .rank-card{grid-template-columns:24px 32px 44px 1fr 60px;gap:7px;}
+  .rank-card .bar-wrap,.rank-card .rank-price{display:none;}
+  header,.controls{padding:12px 14px;}
+  .disclaimer{padding:0 14px 90px;}
+}
+</style>
+</head>
+<body>
+<div class="orb1"></div><div class="orb2"></div><div class="scanline"></div>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">₿</div>
+    <div>
+      <div class="logo-name">CRYPTO<em>RANK</em></div>
+      <div class="logo-sub">CRYPTO POWER · REALTIME BUY SIGNAL</div>
+    </div>
+  </div>
+  <div class="hdr-r">
+    <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+    <div id="clock">--:--:--</div>
+  </div>
+</header>
+
+<div class="controls">
+  <span class="ctrl-label">MARKET</span>
+  <select id="sel-vs">
+    <option value="jpy">JPY（円建て）</option>
+    <option value="usd">USD（ドル建て）</option>
+  </select>
+  <span class="ctrl-label">RANGE</span>
+  <select id="sel-days">
+    <option value="1">24時間</option>
+    <option value="7" selected>7日</option>
+    <option value="30">30日</option>
+  </select>
+  <span class="ctrl-label">TOP</span>
+  <select id="sel-top">
+    <option value="10" selected>10銘柄</option>
+    <option value="20">20銘柄</option>
+    <option value="50">50銘柄</option>
+  </select>
+  <button class="btn btn-primary" onclick="fetchData()">⟳ 更新</button>
+  <span id="last-update">--</span>
+</div>
+
+<main>
+  <div class="summary-row">
+    <div class="sum-card c-green"><div class="sum-lbl">STRONG BUY</div><div class="sum-val" id="cnt-sb">-</div><div class="sum-sub">強い買いシグナル</div></div>
+    <div class="sum-card c-blue"><div class="sum-lbl">BUY</div><div class="sum-val" id="cnt-b">-</div><div class="sum-sub">買いシグナル</div></div>
+    <div class="sum-card c-gold"><div class="sum-lbl">WATCH</div><div class="sum-val" id="cnt-w">-</div><div class="sum-sub">注目銘柄</div></div>
+    <div class="sum-card c-purple"><div class="sum-lbl">AVG SCORE</div><div class="sum-val" id="avg-score">-</div><div class="sum-sub">平均買いスコア</div></div>
+  </div>
+
+  <div class="panel" style="grid-column:1">
+    <div class="panel-hdr">
+      <div class="panel-title" id="rank-title">買いランキング TOP10</div>
+      <span style="font-size:9px;color:var(--muted);letter-spacing:1px">スコア = 総合買い力</span>
+    </div>
+    <div class="panel-body"><div class="rank-list" id="rank-list"></div></div>
+  </div>
+
+  <div class="sidebar">
+    <div class="panel">
+      <div class="panel-hdr"><div class="panel-title">スコア算出方法</div></div>
+      <div class="panel-body">
+        <div class="method-box">
+          <div class="method-lbl">SCORE COMPONENTS</div>
+          <div class="method-row"><span class="method-key">24h 上昇率</span><span class="method-val">35%</span></div>
+          <div class="method-row"><span class="method-key">出来高スコア</span><span class="method-val">25%</span></div>
+          <div class="method-row"><span class="method-key">ATH乖離率</span><span class="method-val">20%</span></div>
+          <div class="method-row"><span class="method-key">時価総額ランク</span><span class="method-val">20%</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-hdr"><div class="panel-title">売りアラート Top5</div></div>
+      <div class="panel-body"><div class="mini-list" id="sell-list"></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-hdr"><div class="panel-title">ボラティリティ Top5</div></div>
+      <div class="panel-body"><div class="mini-list" id="vol-list"></div></div>
+    </div>
+  </div>
+</main>
+
+<div class="disclaimer">
+  <div class="dis-box">
+    <span class="dis-icon">⚠</span>
+    <p class="dis-text"><b>【免責事項】</b>本ツールは情報提供を目的としたものであり、投資助言・投資勧誘ではありません。表示されるスコア・シグナルは参考値であり、将来の価格・収益を保証するものではありません。投資判断はご自身の責任において行ってください。仮想通貨取引は元本割れのリスクを伴います。</p>
+  </div>
+</div>
+
+<div class="statusbar">
+  <div class="sb-dot"></div><span id="status">起動中...</span>
+  <div class="sb-spacer"></div>
+  <span>Data: CoinGecko API</span><span>CRYPTO RANK v1.0</span>
+</div>
+
+<script>
+var PALETTE = ['#00f5a0','#00c8ff','#b57aff','#ffc94d','#ff6b6b','#ff9f43','#1dd1a1','#54a0ff','#ff9ff3','#feca57'];
+
+setInterval(function() {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('ja-JP', {hour12:false});
+}, 1000);
+
+function fetchData() {
+  var vs   = document.getElementById('sel-vs').value;
+  var days = document.getElementById('sel-days').value;
+  var top  = parseInt(document.getElementById('sel-top').value, 10);
+  document.getElementById('rank-title').textContent = '買いランキング TOP' + top;
+  setStatus('データ取得中...');
+
+  var url = 'https://api.coingecko.com/api/v3/coins/markets'
+    + '?vs_currency=' + vs
+    + '&order=market_cap_desc&per_page=' + Math.min(top * 3, 250)
+    + '&page=1&sparkline=false&price_change_percentage=24h,7d,30d';
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', url, true);
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState !== 4) return;
+    if (xhr.status >= 200 && xhr.status < 300) {
+      try {
+        var data = JSON.parse(xhr.responseText);
+        render(data, vs, days, top);
+        document.getElementById('last-update').textContent = '最終更新: ' + new Date().toLocaleTimeString('ja-JP', {hour12:false});
+        setStatus('データ取得完了');
+      } catch(e) { loadDemo(vs, days, top); }
+    } else { loadDemo(vs, days, top); }
+  };
+  xhr.onerror = function() { loadDemo(vs, days, top); };
+  xhr.send();
+}
+
+function calcScore(coin, days, allCoins) {
+  var chgKey = days === '1' ? 'price_change_percentage_24h_in_currency'
+             : days === '7' ? 'price_change_percentage_7d_in_currency'
+             : 'price_change_percentage_30d_in_currency';
+  var chg = coin[chgKey];
+  if (chg === null || chg === undefined) chg = coin.price_change_percentage_24h;
+  if (chg === null || chg === undefined) chg = 0;
+
+  // Rank-normalize among all fetched coins so rankings shift with period
+  var allChgs = [];
+  for (var ii = 0; ii < allCoins.length; ii++) {
+    var vv = allCoins[ii][chgKey];
+    if (vv === null || vv === undefined) vv = allCoins[ii].price_change_percentage_24h || 0;
+    allChgs.push(vv);
+  }
+  allChgs.sort(function(a,b){return a-b;});
+  var myIdx = 0;
+  for (var jj = 0; jj < allChgs.length; jj++) { if (allChgs[jj] <= chg) myIdx = jj; }
+  var chgScore = allChgs.length > 1 ? (myIdx / (allChgs.length - 1)) * 100 : 50;
+
+  var vol = coin.total_volume / (coin.market_cap || 1);
+  var ath = coin.ath ? (1 - coin.current_price / coin.ath) * 100 : 50;
+  var rnk = Math.max(0, 100 - (coin.market_cap_rank || 100));
+
+  // Heavier weight on change for longer periods
+  var wChg, wVol, wAth, wRnk;
+  if (days === '1') { wChg=0.50; wVol=0.25; wAth=0.15; wRnk=0.10; }
+  else if (days === '7') { wChg=0.60; wVol=0.15; wAth=0.15; wRnk=0.10; }
+  else { wChg=0.70; wVol=0.10; wAth=0.12; wRnk=0.08; }
+
+  return Math.round(
+    chgScore * wChg +
+    Math.min(vol * 1000, 100) * wVol +
+    Math.min(ath, 100) * wAth +
+    rnk * wRnk
+  );
+}
+
+function sigLabel(score) {
+  if (score >= 70) return {text:'STRONG BUY', cls:'pill-strong'};
+  if (score >= 55) return {text:'BUY', cls:'pill-buy'};
+  return {text:'WATCH', cls:'pill-watch'};
+}
+
+function render(data, vs, days, top) {
+  var sym = vs === 'jpy' ? '¥' : '$';
+  var chgKey = days === '1' ? 'price_change_percentage_24h_in_currency'
+             : days === '7' ? 'price_change_percentage_7d_in_currency'
+             : 'price_change_percentage_30d_in_currency';
+
+  var scored = [];
+  for (var i = 0; i < data.length; i++) {
+    var obj = {}, c = data[i];
+    for (var k in c) { if (c.hasOwnProperty(k)) obj[k] = c[k]; }
+    obj.score = calcScore(c, days, data);
+    scored.push(obj);
+  }
+  scored.sort(function(a,b){return b.score-a.score;});
+
+  var buyList  = scored.slice(0, top);
+  var sellList = scored.slice().sort(function(a,b){return a.score-b.score;}).slice(0,5);
+  var volList  = scored.slice().sort(function(a,b){
+    return Math.abs(b.price_change_percentage_24h||0)-Math.abs(a.price_change_percentage_24h||0);
+  }).slice(0,5);
+
+  var sb=0,b=0,w=0,tot=0;
+  for (var j=0;j<buyList.length;j++){
+    tot+=buyList[j].score;
+    if(buyList[j].score>=70) sb++;
+    else if(buyList[j].score>=55) b++;
+    else w++;
+  }
+  animCount('cnt-sb',sb); animCount('cnt-b',b); animCount('cnt-w',w);
+  animCount('avg-score', Math.round(tot/buyList.length));
+
+  var maxS = (buyList[0] && buyList[0].score) ? buyList[0].score : 100;
+  var medals = ['🥇','🥈','🥉'];
+  var html = '';
+  for (var n=0;n<buyList.length;n++){
+    var coin=buyList[n];
+    var chgV=coin[chgKey]; if(chgV===null||chgV===undefined) chgV=coin.price_change_percentage_24h; if(chgV===null||chgV===undefined) chgV=0;
+    var pct=Math.round(coin.score/maxS*100);
+    var clr=PALETTE[n%PALETTE.length];
+    var sig=sigLabel(coin.score);
+    var numCls=n===0?'top1':n===1?'top2':n===2?'top3':'';
+    var medal=n<3?medals[n]:String(n+1);
+    var price=coin.current_price>=1?sym+coin.current_price.toLocaleString('ja-JP',{maximumFractionDigits:2}):sym+coin.current_price.toFixed(6);
+    html+='<div class="rank-card" style="animation-delay:'+n*.05+'s">'
+      +'<div class="rank-num '+numCls+'">'+medal+'</div>'
+      +'<img class="coin-img" src="'+coin.image+'" onerror="this.style.display=\'none\'" loading="lazy">'
+      +'<div><div class="coin-sym">'+coin.symbol.toUpperCase()+'</div><div class="coin-name">'+coin.name+'</div></div>'
+      +'<div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:'+pct+'%;background:'+clr+'"></div></div>'
+      +'<span class="pill '+sig.cls+'">'+sig.text+'</span></div>'
+      +'<div class="rank-score" style="color:'+clr+'">'+coin.score+'</div>'
+      +'<div class="rank-price">'+price+'</div>'
+      +'<div class="rank-chg '+(chgV>=0?'up':'dn')+'">'+(chgV>=0?'+':'')+chgV.toFixed(2)+'%</div>'
+      +'</div>';
+  }
+  document.getElementById('rank-list').innerHTML = html;
+
+  var sh=''; for(var s=0;s<sellList.length;s++){var sc=sellList[s];var sv=sc.price_change_percentage_24h||0;
+    sh+='<div class="mini-item" style="animation-delay:'+s*.06+'s"><div class="mini-dot" style="background:var(--red)"></div>'
+      +'<img src="'+sc.image+'" style="width:20px;height:20px;border-radius:50%" loading="lazy">'
+      +'<span class="mini-sym">'+sc.symbol.toUpperCase()+'</span>'
+      +'<span style="font-size:9px;color:var(--muted)">S:<b style="color:var(--red)">'+sc.score+'</b></span>'
+      +'<span class="mini-chg dn">'+sv.toFixed(2)+'%</span></div>';}
+  document.getElementById('sell-list').innerHTML = sh;
+
+  var vh=''; for(var v=0;v<volList.length;v++){var vc=volList[v];var vv=vc.price_change_percentage_24h||0;
+    vh+='<div class="mini-item" style="animation-delay:'+v*.06+'s"><div class="mini-dot" style="background:var(--gold)"></div>'
+      +'<img src="'+vc.image+'" style="width:20px;height:20px;border-radius:50%" loading="lazy">'
+      +'<span class="mini-sym">'+vc.symbol.toUpperCase()+'</span>'
+      +'<span style="font-size:9px;color:var(--muted)">24h</span>'
+      +'<span class="mini-chg '+(vv>=0?'up':'dn')+'" style="color:var(--gold)">&#177;'+Math.abs(vv).toFixed(2)+'%</span></div>';}
+  document.getElementById('vol-list').innerHTML = vh;
+}
+
+function loadDemo(vs, days, top) {
+  var isJpy = vs === 'jpy';
+  var demo = [
+    {symbol:'btc',name:'Bitcoin',image:'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
+     current_price:isJpy?14500000:97000,market_cap_rank:1,price_change_percentage_24h:2.4,
+     price_change_percentage_24h_in_currency:2.4,price_change_percentage_7d_in_currency:8.1,
+     price_change_percentage_30d_in_currency:12.3,total_volume:3e10,market_cap:1.9e12,ath:isJpy?16000000:108000},
+    {symbol:'sol',name:'Solana',image:'https://assets.coingecko.com/coins/images/4128/small/solana.png',
+     current_price:isJpy?30000:200,market_cap_rank:5,price_change_percentage_24h:5.2,
+     price_change_percentage_24h_in_currency:5.2,price_change_percentage_7d_in_currency:14.2,
+     price_change_percentage_30d_in_currency:22.1,total_volume:3e9,market_cap:8e10,ath:isJpy?40000:260},
+    {symbol:'eth',name:'Ethereum',image:'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
+     current_price:isJpy?480000:3200,market_cap_rank:2,price_change_percentage_24h:3.1,
+     price_change_percentage_24h_in_currency:3.1,price_change_percentage_7d_in_currency:9.4,
+     price_change_percentage_30d_in_currency:15.6,total_volume:1.5e10,market_cap:3.8e11,ath:isJpy?730000:4878},
+    {symbol:'sui',name:'Sui',image:'https://assets.coingecko.com/coins/images/26375/small/sui_asset.jpeg',
+     current_price:isJpy?540:3.6,market_cap_rank:20,price_change_percentage_24h:9.4,
+     price_change_percentage_24h_in_currency:9.4,price_change_percentage_7d_in_currency:21.3,
+     price_change_percentage_30d_in_currency:35.2,total_volume:5e8,market_cap:1.3e10,ath:isJpy?800:5.35},
+    {symbol:'ada',name:'Cardano',image:'https://assets.coingecko.com/coins/images/975/small/cardano.png',
+     current_price:isJpy?135:0.9,market_cap_rank:9,price_change_percentage_24h:6.1,
+     price_change_percentage_24h_in_currency:6.1,price_change_percentage_7d_in_currency:16.8,
+     price_change_percentage_30d_in_currency:28.4,total_volume:8e8,market_cap:4e10,ath:isJpy?430:3.1},
+    {symbol:'avax',name:'Avalanche',image:'https://assets.coingecko.com/coins/images/12559/small/Avalanche_Circle_RedWhite_Trans.png',
+     current_price:isJpy?5400:36,market_cap_rank:12,price_change_percentage_24h:7.2,
+     price_change_percentage_24h_in_currency:7.2,price_change_percentage_7d_in_currency:18.5,
+     price_change_percentage_30d_in_currency:31.2,total_volume:6e8,market_cap:2.2e10,ath:isJpy?13000:86},
+    {symbol:'link',name:'Chainlink',image:'https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png',
+     current_price:isJpy?2700:18,market_cap_rank:15,price_change_percentage_24h:2.9,
+     price_change_percentage_24h_in_currency:2.9,price_change_percentage_7d_in_currency:7.6,
+     price_change_percentage_30d_in_currency:11.4,total_volume:4e8,market_cap:1.7e10,ath:isJpy?6800:52.7},
+    {symbol:'bnb',name:'BNB',image:'https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png',
+     current_price:isJpy?90000:600,market_cap_rank:4,price_change_percentage_24h:1.8,
+     price_change_percentage_24h_in_currency:1.8,price_change_percentage_7d_in_currency:5.2,
+     price_change_percentage_30d_in_currency:8.9,total_volume:2e9,market_cap:8.7e10,ath:isJpy?115000:769},
+    {symbol:'xrp',name:'XRP',image:'https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png',
+     current_price:isJpy?360:2.4,market_cap_rank:3,price_change_percentage_24h:4.3,
+     price_change_percentage_24h_in_currency:4.3,price_change_percentage_7d_in_currency:11.7,
+     price_change_percentage_30d_in_currency:19.8,total_volume:5e9,market_cap:2e11,ath:isJpy?550:3.4},
+    {symbol:'dot',name:'Polkadot',image:'https://assets.coingecko.com/coins/images/12171/small/polkadot.png',
+     current_price:isJpy?1050:7,market_cap_rank:18,price_change_percentage_24h:3.8,
+     price_change_percentage_24h_in_currency:3.8,price_change_percentage_7d_in_currency:10.2,
+     price_change_percentage_30d_in_currency:17.3,total_volume:3e8,market_cap:1.5e10,ath:isJpy?5500:55}
+  ];
+  render(demo.slice(0,top), vs, days, top);
+  setStatus('デモモード（参考データ表示中）');
+  document.getElementById('last-update').textContent = '最終更新: ' + new Date().toLocaleTimeString('ja-JP',{hour12:false});
+}
+
+function animCount(id,target){
+  var el=document.getElementById(id),cur=0,step=Math.ceil(target/15)||1;
+  var t=setInterval(function(){cur=Math.min(cur+step,target);el.textContent=cur;if(cur>=target)clearInterval(t);},35);
+}
+function setStatus(msg){document.getElementById('status').textContent=msg;}
+
+fetchData();
+setInterval(fetchData,60000);
+</script>
+</body>
+</html>

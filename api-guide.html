@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APIキー取得ガイド</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+JP:wght@400;700&display=swap');
+
+  :root {
+    --bg: #0a0e14;
+    --panel: #111720;
+    --panel2: #141c26;
+    --border: #1e2d3d;
+    --green: #00ff9d;
+    --red: #ff4466;
+    --yellow: #ffd700;
+    --blue: #00aaff;
+    --text: #c8d8e8;
+    --dim: #4a5a6a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    padding: 14px;
+    background-image:
+      radial-gradient(ellipse at 20% 50%, rgba(0,255,157,0.03) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(0,170,255,0.03) 0%, transparent 60%);
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .title-block h1 { font-size: 20px; color: var(--green); letter-spacing: 3px; }
+  .title-block p  { font-size: 10px; color: var(--dim); letter-spacing: 2px; margin-top: 2px; }
+
+  .section-title {
+    font-size: 10px;
+    color: var(--dim);
+    letter-spacing: 3px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  /* TABS */
+  .tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+  .tab {
+    flex: 1; padding: 8px; text-align: center;
+    font-family: 'Share Tech Mono', monospace; font-size: 11px; letter-spacing: 2px;
+    border: 1px solid var(--border); border-radius: 6px;
+    background: transparent; color: var(--dim); cursor: pointer; transition: all 0.2s;
+  }
+  .tab.active { border-color: var(--green); color: var(--green); background: rgba(0,255,157,0.06); }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* STEP */
+  .step-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+  .step-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    position: relative;
+    overflow: hidden;
+  }
+  .step-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--blue);
+  }
+
+  .step-num {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: rgba(0,170,255,0.15);
+    border: 1px solid var(--blue);
+    color: var(--blue);
+    font-size: 13px;
+    font-weight: bold;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .step-body {}
+  .step-title { font-size: 13px; color: var(--text); margin-bottom: 5px; }
+  .step-desc  { font-size: 11px; color: var(--dim); line-height: 1.8; }
+  .step-desc a { color: var(--blue); text-decoration: none; }
+  .step-desc a:hover { text-decoration: underline; }
+
+  .step-img {
+    width: 100%;
+    border-radius: 6px;
+    margin-top: 8px;
+    border: 1px solid var(--border);
+    background: var(--panel2);
+    overflow: hidden;
+  }
+
+  /* MOCK BROWSER */
+  .mock-browser {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 8px;
+    margin-bottom: 4px;
+  }
+
+  .mock-bar {
+    background: #0d1520;
+    padding: 7px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .mock-dots { display: flex; gap: 5px; }
+  .mock-dot  { width: 8px; height: 8px; border-radius: 50%; }
+  .mock-dot.r { background: #ff5f57; }
+  .mock-dot.y { background: #ffbd2e; }
+  .mock-dot.g { background: #28c840; }
+
+  .mock-url {
+    flex: 1;
+    background: rgba(255,255,255,0.05);
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 10px;
+    color: var(--dim);
+  }
+
+  .mock-content { padding: 14px; }
+
+  /* FORM MOCK */
+  .mock-form { display: flex; flex-direction: column; gap: 8px; }
+  .mock-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .mock-label { font-size: 9px; color: var(--dim); letter-spacing: 1px; }
+  .mock-input {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 7px 10px;
+    font-size: 11px;
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+  }
+  .mock-input.filled { border-color: var(--blue); color: var(--blue); }
+
+  .mock-btn {
+    padding: 9px;
+    border-radius: 5px;
+    text-align: center;
+    font-size: 12px;
+    letter-spacing: 1px;
+    margin-top: 4px;
+  }
+  .mock-btn.primary { background: var(--blue); color: #000; font-weight: bold; }
+  .mock-btn.green   { background: var(--green); color: #000; font-weight: bold; }
+
+  /* API KEY DISPLAY */
+  .api-key-box {
+    background: rgba(0,255,157,0.06);
+    border: 1px solid rgba(0,255,157,0.3);
+    border-radius: 6px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  .api-key-val {
+    flex: 1;
+    font-size: 12px;
+    color: var(--green);
+    letter-spacing: 2px;
+    word-break: break-all;
+  }
+
+  .copy-btn {
+    padding: 5px 12px;
+    background: rgba(0,255,157,0.1);
+    border: 1px solid rgba(0,255,157,0.3);
+    border-radius: 4px;
+    color: var(--green);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .copy-btn:active { opacity: 0.6; }
+
+  /* PLAN TABLE */
+  .plan-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 14px;
+    font-size: 11px;
+  }
+  .plan-table th {
+    padding: 8px 10px;
+    text-align: left;
+    color: var(--dim);
+    letter-spacing: 1px;
+    font-size: 9px;
+    border-bottom: 1px solid var(--border);
+  }
+  .plan-table td {
+    padding: 9px 10px;
+    border-bottom: 1px solid rgba(30,45,61,0.5);
+  }
+  .plan-table tr:last-child td { border-bottom: none; }
+  .plan-free { color: var(--green); font-weight: bold; }
+  .badge-free {
+    display: inline-block;
+    padding: 2px 8px;
+    background: rgba(0,255,157,0.1);
+    border: 1px solid rgba(0,255,157,0.3);
+    border-radius: 4px;
+    color: var(--green);
+    font-size: 9px;
+  }
+  .badge-paid {
+    display: inline-block;
+    padding: 2px 8px;
+    background: rgba(255,215,0,0.08);
+    border: 1px solid rgba(255,215,0,0.2);
+    border-radius: 4px;
+    color: var(--yellow);
+    font-size: 9px;
+  }
+
+  /* CHECK LIST */
+  .check-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
+  .check-item {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 9px 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 11px;
+    line-height: 1.6;
+  }
+  .check-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+
+  /* NOTICE */
+  .notice {
+    background: rgba(255,215,0,0.05);
+    border: 1px solid rgba(255,215,0,0.2);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 11px;
+    line-height: 1.7;
+    color: var(--yellow);
+    margin-bottom: 14px;
+  }
+
+  .notice.info {
+    background: rgba(0,170,255,0.05);
+    border-color: rgba(0,170,255,0.2);
+    color: var(--blue);
+  }
+
+  .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--green); box-shadow: 0 0 8px var(--green);
+    animation: pulse 1.5s infinite; display: inline-block;
+    margin-right: 6px; vertical-align: middle;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  .session {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(0,255,157,0.05);
+    border: 1px solid var(--green); border-radius: 6px;
+    padding: 6px 12px; font-size: 11px; color: var(--green);
+    margin-bottom: 14px; letter-spacing: 2px;
+  }
+
+  .link-btn {
+    display: inline-block;
+    padding: 9px 18px;
+    background: linear-gradient(90deg, rgba(0,170,255,0.15), rgba(0,255,157,0.1));
+    border: 1px solid var(--blue);
+    border-radius: 6px;
+    color: var(--blue);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-decoration: none;
+    display: block;
+    text-align: center;
+    margin-bottom: 14px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title-block">
+    <h1>API GUIDE</h1>
+    <p>TWELVE DATA · FREE API KEY SETUP</p>
+  </div>
+</header>
+
+<div class="session">
+  <div class="dot"></div>
+  <span>通貨強弱ツール用 APIキー取得ガイド</span>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('twelve')">Twelve Data</button>
+  <button class="tab" onclick="switchTab('faq')">よくある質問</button>
+  <button class="tab" onclick="switchTab('plan')">プラン比較</button>
+</div>
+
+<!-- ===== Twelve Data ===== -->
+<div class="section active" id="sec-twelve">
+
+  <div class="notice info">
+    ℹ 通貨強弱ランキング LIVE ツールには Twelve Data の無料APIキーが必要です。<br>
+    登録は無料・クレジットカード不要・約3分で完了します。
+  </div>
+
+  <div class="section-title">◆ 取得手順</div>
+  <div class="step-list">
+
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-title">公式サイトにアクセス</div>
+        <div class="step-desc">
+          ブラウザで以下のURLを開いてください。<br><br>
+          <a href="https://twelvedata.com" target="_blank">https://twelvedata.com</a>
+        </div>
+        <div class="mock-browser">
+          <div class="mock-bar">
+            <div class="mock-dots"><div class="mock-dot r"></div><div class="mock-dot y"></div><div class="mock-dot g"></div></div>
+            <div class="mock-url">twelvedata.com</div>
+          </div>
+          <div class="mock-content">
+            <div style="font-size:16px;color:var(--text);margin-bottom:6px;">Twelve Data</div>
+            <div style="font-size:10px;color:var(--dim);margin-bottom:12px;">Financial data APIs for developers</div>
+            <div class="mock-btn primary">Get free API key →</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-title">無料アカウントを登録</div>
+        <div class="step-desc">
+          右上の「Sign Up」または「Get free API key」をクリック。<br>
+          メールアドレスとパスワードを入力して登録します。<br><br>
+          Googleアカウントでのログインも可能です。
+        </div>
+        <div class="mock-browser">
+          <div class="mock-bar">
+            <div class="mock-dots"><div class="mock-dot r"></div><div class="mock-dot y"></div><div class="mock-dot g"></div></div>
+            <div class="mock-url">twelvedata.com/register</div>
+          </div>
+          <div class="mock-content">
+            <div style="font-size:13px;color:var(--text);margin-bottom:10px;">アカウント作成</div>
+            <div class="mock-form">
+              <div class="mock-field">
+                <div class="mock-label">EMAIL ADDRESS</div>
+                <div class="mock-input filled">your@email.com</div>
+              </div>
+              <div class="mock-field">
+                <div class="mock-label">PASSWORD</div>
+                <div class="mock-input">••••••••</div>
+              </div>
+              <div class="mock-btn primary">Create Account</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <div class="step-title">ダッシュボードでAPIキーを確認</div>
+        <div class="step-desc">
+          ログイン後、右上のユーザーアイコン →「API Keys」をクリック。<br>
+          または以下のURLに直接アクセス：<br><br>
+          <a href="https://twelvedata.com/account/api-keys" target="_blank">https://twelvedata.com/account/api-keys</a>
+        </div>
+        <div class="mock-browser">
+          <div class="mock-bar">
+            <div class="mock-dots"><div class="mock-dot r"></div><div class="mock-dot y"></div><div class="mock-dot g"></div></div>
+            <div class="mock-url">twelvedata.com/account/api-keys</div>
+          </div>
+          <div class="mock-content">
+            <div style="font-size:11px;color:var(--dim);margin-bottom:8px;letter-spacing:1px;">YOUR API KEY</div>
+            <div class="api-key-box">
+              <span class="api-key-val">a1b2c3d4e5f6789012345678abcdef01</span>
+              <button class="copy-btn" onclick="copyDemo()">COPY</button>
+            </div>
+            <div style="font-size:9px;color:var(--dim);margin-top:6px;">Free Plan · 8 credits/min · 800 credits/day</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <div class="step-title">ツールにAPIキーを貼り付け</div>
+        <div class="step-desc">
+          「通貨強弱ランキング LIVE」ツールを開き、<br>
+          上部の「API KEY」入力欄にコピーしたキーを貼り付けて<br>
+          「保存」ボタンをクリックすれば完了です。
+        </div>
+        <div class="mock-browser">
+          <div class="mock-bar">
+            <div class="mock-dots"><div class="mock-dot r"></div><div class="mock-dot y"></div><div class="mock-dot g"></div></div>
+            <div class="mock-url">currency-strength-live.html</div>
+          </div>
+          <div class="mock-content">
+            <div style="font-size:9px;color:var(--dim);margin-bottom:6px;letter-spacing:2px;">API KEY</div>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <div class="mock-input filled" style="flex:1;font-size:10px;">a1b2c3d4e5f6789012345678abcdef01</div>
+              <div class="mock-btn green" style="padding:7px 12px;margin:0;font-size:10px;border-radius:4px;">保存</div>
+            </div>
+            <div style="font-size:9px;color:var(--green);margin-top:6px;">✓ 保存済み</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="notice">
+    ⚠ 無料プランは1分あたり8リクエスト・1日800リクエストの制限があります。<br>
+    本ツールは6ペア × 60秒更新のため、通常利用では制限に引っかかりません。
+  </div>
+
+</div>
+
+<!-- ===== FAQ ===== -->
+<div class="section" id="sec-faq">
+  <div class="section-title">◆ よくある質問</div>
+  <div class="check-list">
+
+    <div class="check-item">
+      <span class="check-icon">💳</span>
+      <div>
+        <div style="color:var(--text);margin-bottom:3px;">クレジットカードは必要ですか？</div>
+        <div style="color:var(--dim);">無料プランの登録にカードは不要です。メールアドレスだけで登録できます。</div>
+      </div>
+    </div>
+
+    <div class="check-item">
+      <span class="check-icon">🔒</span>
+      <div>
+        <div style="color:var(--text);margin-bottom:3px;">APIキーは他人に見せても大丈夫ですか？</div>
+        <div style="color:var(--dim);">見せないほうが安全です。APIキーは自分専用のものです。本ツールではブラウザのローカルストレージに保存され、外部には送信されません。</div>
+      </div>
+    </div>
+
+    <div class="check-item">
+      <span class="check-icon">⚡</span>
+      <div>
+        <div style="color:var(--text);margin-bottom:3px;">「API制限エラー」が出ました</div>
+        <div style="color:var(--dim);">無料プランは1分8リクエストの制限があります。しばらく待ってから「更新」ボタンを押してください。頻繁に発生する場合は手動更新に切り替えてください。</div>
+      </div>
+    </div>
+
+    <div class="check-item">
+      <span class="check-icon">📧</span>
+      <div>
+        <div style="color:var(--text);margin-bottom:3px;">確認メールが届きません</div>
+        <div style="color:var(--dim);">迷惑メールフォルダを確認してください。GmailやYahooメールでも問題なく受信できます。</div>
+      </div>
+    </div>
+
+    <div class="check-item">
+      <span class="check-icon">🔄</span>
+      <div>
+        <div style="color:var(--text);margin-bottom:3px;">APIキーを再発行したい</div>
+        <div style="color:var(--dim);">Twelve Dataのダッシュボード「API Keys」ページから新しいキーを発行できます。古いキーは無効になります。</div>
+      </div>
+    </div>
+
+    <div class="check-item">
+      <span class="check-icon">📱</span>
+      <div>
+        <div style="color:var(--text);margin-bottom:3px;">スマホからでも登録できますか？</div>
+        <div style="color:var(--dim);">できます。スマホのブラウザからtwelvedata.comにアクセスして同じ手順で登録できます。</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== プラン比較 ===== -->
+<div class="section" id="sec-plan">
+  <div class="section-title">◆ Twelve Data プラン比較</div>
+
+  <div class="notice info">
+    ℹ 通貨強弱ツールは無料プランで十分動作します。有料プランは不要です。
+  </div>
+
+  <table class="plan-table">
+    <thead>
+      <tr>
+        <th>プラン</th>
+        <th>料金</th>
+        <th>リクエスト/分</th>
+        <th>リクエスト/日</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="background:rgba(0,255,157,0.04)">
+        <td><span class="badge-free">FREE</span></td>
+        <td class="plan-free">無料</td>
+        <td class="plan-free">8</td>
+        <td class="plan-free">800</td>
+      </tr>
+      <tr>
+        <td><span class="badge-paid">BASIC</span></td>
+        <td style="color:var(--dim)">$8/月</td>
+        <td style="color:var(--dim)">30</td>
+        <td style="color:var(--dim)">5,000</td>
+      </tr>
+      <tr>
+        <td><span class="badge-paid">PRO</span></td>
+        <td style="color:var(--dim)">$29/月</td>
+        <td style="color:var(--dim)">75</td>
+        <td style="color:var(--dim)">30,000</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="section-title">◆ 本ツールのAPI使用量</div>
+  <div class="check-list">
+    <div class="check-item">
+      <span class="check-icon">📊</span>
+      <div>
+        <div style="color:var(--text);margin-bottom:3px;">1回の更新で6リクエスト使用</div>
+        <div style="color:var(--dim);">6通貨ペア（XAU/USD、USD/JPY、EUR/USD、GBP/USD、EUR/JPY、GBP/JPY）それぞれ1リクエスト。</div>
+      </div>
+    </div>
+    <div class="check-item">
+      <span class="check-icon">⏱</span>
+      <div>
+        <div style="color:var(--text);margin-bottom:3px;">60秒自動更新の場合 = 1日最大144リクエスト</div>
+        <div style="color:var(--dim);">1日24時間更新し続けても144リクエスト。無料枠800の約18%しか使いません。</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    const tabs = ['twelve','faq','plan'];
+    t.classList.toggle('active', tabs[i] === tab);
+  });
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('sec-' + tab).classList.add('active');
+}
+
+function copyDemo() {
+  navigator.clipboard.writeText('a1b2c3d4e5f6789012345678abcdef01').then(() => {
+    alert('（デモ）コピーしました');
+  });
+}
+</script>
+</body>
+</html>
