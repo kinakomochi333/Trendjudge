@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>環境ナビ MarketEnvNavi｜取扱説明書</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f5f0;
+  --surface:#ffffff;
+  --surface2:#f0ede6;
+  --line:#e4e0d6;
+  --line2:#d4cfc3;
+  --ink:#1a1814;
+  --ink-soft:#5c5850;
+  --ink-faint:#9e9a90;
+  --gold:#b07d2a;
+  --gold-light:#e8c878;
+  --gold-pale:#fdf3d8;
+  --gold-mid:#d4a040;
+  --buy:#1d7a4a;
+  --buy-bg:#e6f5ec;
+  --sell:#c0392b;
+  --sell-bg:#fdecea;
+  --wait:#6b6b80;
+  --wait-bg:#f0eff5;
+  --accent:#2563b0;
+  --accent-bg:#eaf2fd;
+  --warn-bg:#fff8e6;
+  --warn-border:#e8c878;
+  --danger-bg:#fff0ed;
+  --danger-border:#f5a090;
+  --r:12px;
+  --mono:'DM Mono',monospace;
+  --sans:'DM Sans','Noto Sans JP',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--sans);
+  line-height:1.8;
+  font-size:15.5px;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ─── Nav bar ─── */
+.topbar{
+  background:var(--surface);
+  border-bottom:1px solid var(--line);
+  padding:0 32px;
+  position:sticky;
+  top:0;
+  z-index:100;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  height:54px;
+}
+.topbar-brand{
+  font-family:var(--mono);
+  font-size:13px;
+  font-weight:500;
+  color:var(--gold);
+  letter-spacing:.08em;
+}
+.topbar-nav{
+  display:flex;
+  gap:6px;
+}
+.topbar-nav a{
+  font-size:12px;
+  color:var(--ink-soft);
+  text-decoration:none;
+  padding:5px 10px;
+  border-radius:6px;
+  transition:background .18s,color .18s;
+  font-weight:500;
+  letter-spacing:.01em;
+}
+.topbar-nav a:hover{background:var(--surface2);color:var(--ink)}
+
+/* ─── Hero ─── */
+.hero{
+  background:var(--surface);
+  border-bottom:1px solid var(--line);
+  padding:72px 32px 64px;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+}
+.hero-pattern{
+  position:absolute;
+  inset:0;
+  background-image:
+    radial-gradient(circle at 20% 50%, rgba(176,125,42,0.06) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(37,99,176,0.05) 0%, transparent 50%),
+    repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(176,125,42,0.04) 40px),
+    repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(176,125,42,0.04) 40px);
+  pointer-events:none;
+}
+.hero-inner{position:relative;z-index:1;max-width:640px;margin:0 auto}
+.hero-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  background:var(--gold-pale);
+  border:1px solid var(--gold-light);
+  color:var(--gold);
+  font-family:var(--mono);
+  font-size:11px;
+  font-weight:500;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  padding:5px 14px;
+  border-radius:999px;
+  margin-bottom:24px;
+}
+.hero-badge::before{
+  content:"";
+  width:6px;height:6px;
+  background:var(--gold-mid);
+  border-radius:50%;
+}
+.hero h1{
+  font-family:var(--sans);
+  font-weight:900;
+  font-size:clamp(36px,6vw,60px);
+  line-height:1.1;
+  letter-spacing:-.02em;
+  color:var(--ink);
+}
+.hero h1 em{
+  font-style:normal;
+  color:var(--gold);
+}
+.hero-en{
+  font-family:var(--mono);
+  font-size:13px;
+  color:var(--ink-faint);
+  letter-spacing:.22em;
+  margin-top:10px;
+  display:block;
+  text-transform:uppercase;
+}
+.hero-tagline{
+  font-size:16px;
+  color:var(--ink-soft);
+  margin-top:20px;
+  line-height:1.75;
+}
+.hero-meta{
+  margin-top:32px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:16px;
+  flex-wrap:wrap;
+}
+.hero-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  background:var(--surface2);
+  border:1px solid var(--line2);
+  color:var(--ink-soft);
+  font-size:12.5px;
+  font-family:var(--mono);
+  padding:6px 14px;
+  border-radius:999px;
+}
+
+/* ─── Layout ─── */
+.wrap{max-width:860px;margin:0 auto;padding:0 32px 100px}
+
+/* ─── Section ─── */
+section{padding:56px 0 0}
+.sec-head{
+  display:flex;
+  align-items:flex-start;
+  gap:16px;
+  margin-bottom:28px;
+}
+.sec-num{
+  flex:none;
+  background:var(--gold-pale);
+  border:1px solid var(--gold-light);
+  color:var(--gold);
+  font-family:var(--mono);
+  font-size:11.5px;
+  font-weight:500;
+  padding:4px 10px;
+  border-radius:6px;
+  letter-spacing:.06em;
+  margin-top:4px;
+}
+.sec-head h2{
+  font-size:26px;
+  font-weight:700;
+  letter-spacing:-.01em;
+  color:var(--ink);
+  line-height:1.2;
+}
+.sec-head h2 .sub{
+  display:block;
+  font-family:var(--mono);
+  font-size:11px;
+  color:var(--ink-faint);
+  letter-spacing:.18em;
+  margin-top:5px;
+  font-weight:400;
+}
+h3{
+  font-size:16.5px;
+  font-weight:700;
+  color:var(--ink);
+  margin:32px 0 12px;
+  display:flex;
+  align-items:center;
+  gap:9px;
+}
+h3::before{
+  content:"";
+  width:3px;height:18px;
+  background:var(--gold-mid);
+  border-radius:2px;
+  flex:none;
+}
+p{margin-bottom:14px}
+.soft{color:var(--ink-soft)}
+strong{font-weight:700;color:var(--ink)}
+a{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+
+/* ─── Lead ─── */
+.lead{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-left:3px solid var(--gold-mid);
+  border-radius:var(--r);
+  padding:28px 30px;
+  font-size:16px;
+  line-height:1.9;
+}
+
+/* ─── Features grid ─── */
+.features{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px}
+.feat{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  padding:22px 22px 20px;
+  transition:border-color .22s,box-shadow .22s,transform .22s;
+}
+.feat:hover{
+  border-color:var(--gold-light);
+  box-shadow:0 4px 20px rgba(176,125,42,0.1);
+  transform:translateY(-2px);
+}
+.feat-ic{
+  font-family:var(--mono);
+  font-size:11px;
+  color:var(--gold);
+  background:var(--gold-pale);
+  border:1px solid var(--gold-light);
+  padding:3px 9px;
+  border-radius:5px;
+  letter-spacing:.1em;
+  display:inline-block;
+  margin-bottom:12px;
+}
+.feat h4{font-size:15.5px;font-weight:700;margin-bottom:8px;color:var(--ink)}
+.feat p{font-size:13.5px;color:var(--ink-soft);margin:0;line-height:1.7}
+.feat.principle{
+  border-style:dashed;
+  border-color:var(--line2);
+  background:var(--surface2);
+}
+
+/* ─── Steps ─── */
+.steps{margin-top:8px}
+.step{
+  display:flex;
+  gap:20px;
+  padding:22px 0;
+  border-bottom:1px solid var(--line);
+}
+.step:last-child{border-bottom:none}
+.step-n{
+  flex:none;
+  width:40px;height:40px;
+  background:var(--gold-pale);
+  border:1.5px solid var(--gold-light);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-weight:500;font-size:16px;
+  color:var(--gold);
+}
+.step-body{flex:1;min-width:0}
+.step-body h4{font-size:16px;font-weight:700;margin-bottom:6px;color:var(--ink)}
+.step-body p{font-size:14px;color:var(--ink-soft);margin-bottom:0}
+
+/* ─── Code ─── */
+code{
+  font-family:var(--mono);
+  font-size:12.5px;
+  background:var(--surface2);
+  border:1px solid var(--line2);
+  padding:2px 7px;
+  border-radius:5px;
+  color:var(--ink);
+}
+.codeblock{
+  font-family:var(--mono);
+  font-size:12.5px;
+  line-height:1.7;
+  background:#1e1e1e;
+  border-radius:10px;
+  padding:16px 20px;
+  margin:12px 0;
+  color:#d4d0c8;
+  overflow-x:auto;
+  white-space:pre;
+}
+.codeblock .cb-label{
+  display:block;
+  font-size:10px;
+  letter-spacing:.1em;
+  color:#888;
+  margin-bottom:8px;
+  text-transform:uppercase;
+}
+
+/* ─── Callouts ─── */
+.box{border-radius:var(--r);padding:18px 22px;margin:18px 0;border:1px solid var(--line)}
+.box .box-t{font-weight:700;font-size:14px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.box p{font-size:13.5px;margin-bottom:6px;color:var(--ink-soft)}
+.box p:last-child{margin-bottom:0}
+.box.note{background:var(--accent-bg);border-color:#9fc0ef}
+.box.note .box-t{color:var(--accent)}
+.box.warn{background:var(--warn-bg);border-color:var(--warn-border)}
+.box.warn .box-t{color:var(--gold)}
+.box.danger{background:var(--danger-bg);border-color:var(--danger-border)}
+.box.danger .box-t{color:var(--sell)}
+
+/* ─── Mock terminal ─── */
+.mock{
+  background:#1a1814;
+  border:1px solid #3a352c;
+  border-radius:var(--r);
+  padding:0;
+  margin:16px 0;
+  overflow:hidden;
+}
+.mock-titlebar{
+  background:#252119;
+  padding:10px 16px;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  border-bottom:1px solid #3a352c;
+}
+.mock-dot{width:10px;height:10px;border-radius:50%}
+.mock-dot.r{background:#e55}
+.mock-dot.y{background:#ea5}
+.mock-dot.g{background:#5b5}
+.mock-title{font-family:var(--mono);font-size:11px;color:#888;margin-left:8px;letter-spacing:.05em}
+.mock-body{
+  padding:16px 20px;
+  font-family:var(--mono);
+  font-size:12.5px;
+  line-height:2.0;
+  color:#c8c4bc;
+}
+.mock-head{color:var(--gold-light);font-weight:500}
+.mock-buy{color:#6de898}
+.mock-sell{color:#f0907a}
+.mock-wait{color:#9899bb}
+.mock-foot{color:#5c5850;font-size:11px;display:block;margin-top:6px}
+.mock-em{color:#f0a35a}
+
+/* ─── Status tags ─── */
+.tag{font-family:var(--mono);font-size:11px;padding:3px 9px;border-radius:5px;font-weight:500}
+.tag.buy{background:var(--buy-bg);color:var(--buy);border:1px solid rgba(29,122,74,0.2)}
+.tag.sell{background:var(--sell-bg);color:var(--sell);border:1px solid rgba(192,57,43,0.2)}
+.tag.wait{background:var(--wait-bg);color:var(--wait);border:1px solid rgba(107,107,128,0.2)}
+
+/* ─── Table ─── */
+.table-wrap{border-radius:var(--r);overflow:hidden;border:1px solid var(--line);margin:16px 0}
+table{width:100%;border-collapse:collapse;font-size:13.5px;background:var(--surface)}
+th,td{text-align:left;padding:11px 16px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--gold);font-weight:700;font-size:11.5px;letter-spacing:.06em;background:var(--gold-pale);border-bottom:1px solid var(--gold-light)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surface2)}
+td code{font-size:12px}
+
+/* ─── Cost cards ─── */
+.cost-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:16px 0}
+.cost-card{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  padding:18px 18px 16px;
+  text-align:center;
+  transition:border-color .2s,box-shadow .2s;
+}
+.cost-card:hover{border-color:var(--gold-light);box-shadow:0 4px 16px rgba(176,125,42,0.08)}
+.cost-card.recommended{
+  border-color:var(--gold-mid);
+  background:var(--gold-pale);
+}
+.cost-rec{
+  font-family:var(--mono);
+  font-size:10px;
+  color:var(--gold);
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  margin-bottom:8px;
+  background:var(--gold-light);
+  padding:2px 8px;
+  border-radius:999px;
+  display:inline-block;
+}
+.cost-model{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--ink);margin-bottom:4px}
+.cost-price{font-size:26px;font-weight:700;color:var(--ink);line-height:1.2}
+.cost-price span{font-size:13px;color:var(--ink-soft);font-weight:400}
+.cost-desc{font-size:12.5px;color:var(--ink-soft);margin-top:8px}
+
+/* ─── FAQ ─── */
+details{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  margin-bottom:8px;
+  overflow:hidden;
+  transition:border-color .2s;
+}
+details[open]{border-color:var(--gold-light)}
+summary{
+  padding:15px 20px;
+  cursor:pointer;
+  font-weight:700;
+  font-size:14.5px;
+  list-style:none;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  user-select:none;
+}
+summary::-webkit-details-marker{display:none}
+.q-badge{
+  flex:none;
+  background:var(--gold-pale);
+  border:1px solid var(--gold-light);
+  color:var(--gold);
+  font-family:var(--mono);
+  font-size:11px;
+  padding:2px 8px;
+  border-radius:5px;
+  font-weight:500;
+}
+.sum-arrow{
+  margin-left:auto;
+  color:var(--ink-faint);
+  font-size:13px;
+  transition:transform .2s;
+}
+details[open] .sum-arrow{transform:rotate(180deg)}
+details[open] summary{border-bottom:1px solid var(--line)}
+.faq-body{
+  padding:14px 20px 18px;
+  color:var(--ink-soft);
+  font-size:13.5px;
+  line-height:1.75;
+}
+.faq-body code{font-size:12px}
+
+/* ─── Footer ─── */
+footer{
+  background:var(--surface);
+  border-top:1px solid var(--line);
+  margin-top:72px;
+  padding:44px 32px;
+  text-align:center;
+}
+.footer-brand{
+  font-family:var(--sans);
+  font-size:20px;
+  font-weight:700;
+  color:var(--ink);
+  margin-bottom:8px;
+  letter-spacing:-.01em;
+}
+.footer-brand span{color:var(--gold)}
+footer p{color:var(--ink-soft);font-size:13px}
+.footer-meta{
+  margin-top:20px;
+  padding-top:20px;
+  border-top:1px solid var(--line);
+  font-size:12px;
+  color:var(--ink-faint);
+}
+.footer-mono{font-family:var(--mono)}
+
+@media(max-width:640px){
+  .features{grid-template-columns:1fr}
+  .cost-grid{grid-template-columns:1fr}
+  .topbar-nav{display:none}
+  body{font-size:15px}
+  .wrap{padding:0 20px 80px}
+  .hero{padding:48px 20px 44px}
+}
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav class="topbar">
+  <div class="topbar-brand">MARKET ENV NAVI</div>
+  <div class="topbar-nav">
+    <a href="#about">概要</a>
+    <a href="#features">特徴</a>
+    <a href="#install">導入</a>
+    <a href="#usage">使い方</a>
+    <a href="#apikey">APIキー</a>
+    <a href="#settings">設定</a>
+    <a href="#faq">FAQ</a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="hero-pattern"></div>
+  <div class="hero-inner">
+    <div class="hero-badge">For MetaTrader 5 — Analysis Tool</div>
+    <h1>環境<em>ナビ</em></h1>
+    <span class="hero-en">Market Env Navi</span>
+    <p class="hero-tagline">忖度のない相場環境のナビゲーター。<br>「今どこを、どう待つべきか」を、数値の根拠とともに言葉で示します。</p>
+    <div class="hero-meta">
+      <span class="hero-pill">VERSION 4.20</span>
+      <span class="hero-pill">取扱説明書</span>
+      <span class="hero-pill">分析専用 / 自動売買なし</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- 01 -->
+<section id="about">
+  <div class="sec-head">
+    <span class="sec-num">01</span>
+    <h2>この商品について<span class="sub">OVERVIEW</span></h2>
+  </div>
+  <div class="lead">
+    <p style="margin-bottom:14px">「環境ナビ」は、<strong>勝ち負けを予言するツールではありません。</strong></p>
+    <p style="margin-bottom:14px">チャートを開くたびに湧き上がる「とりあえず入りたい」という衝動。その焦りに対して、複数の通貨ペアを冷静に並べ、<strong>今エントリーに値する場所があるのか、それとも見送るべきか</strong>を、忖度なく突きつけます。</p>
+    <p style="margin-bottom:0">そして気になったペアを選べば、移動平均・ATR・ボリンジャーバンドといった<strong>具体的な数値を根拠に</strong>、「どこまで引きつけて、どこで損切りを置くか」までを、初心者にも分かる言葉で解説します。判断を奪うのではなく、判断の材料を、客観的に手渡すための道具です。</p>
+  </div>
+  <div class="box note" style="margin-top:20px">
+    <div class="box-t">◆ なぜ「忖度がない」のか</div>
+    <p>人に相談すると、相手はあなたの顔色やポジションを読んで気を遣います。しかしこのツールは、あなたが何を持っていようと、何を期待していようと、データが示す事実だけを同じ温度で返します。だからこそ、自分に都合のよい解釈にブレーキをかける「鏡」として機能します。</p>
+  </div>
+</section>
+
+<!-- 02 -->
+<section id="features">
+  <div class="sec-head">
+    <span class="sec-num">02</span>
+    <h2>5つの特徴<span class="sub">FEATURES</span></h2>
+  </div>
+  <div class="features">
+    <div class="feat">
+      <div class="feat-ic">01 / RAW DATA</div>
+      <h4>素の値動きで判定</h4>
+      <p>判定の土台は変化率・複数時間足の方向・値幅といった「生のデータ」。後付けの解釈に頼らず、相場の事実そのもので評価します。</p>
+    </div>
+    <div class="feat">
+      <div class="feat-ic">02 / NO FLATTERY</div>
+      <h4>飛びつきを止める</h4>
+      <p>高値での買い・安値での売りは「飛びつき」として評価を下げます。条件が揃わなければ、はっきり「見送り」と表示します。</p>
+    </div>
+    <div class="feat">
+      <div class="feat-ic">03 / RANKING</div>
+      <h4>選択肢を一覧で</h4>
+      <p>主要ペアを一括スキャンし「今、条件が揃っている順」に並べます。一つのペアに固執せず、最善の選択肢を選べます。</p>
+    </div>
+    <div class="feat">
+      <div class="feat-ic">04 / AI INSIGHT</div>
+      <h4>言葉で解説</h4>
+      <p>気になるペアを選ぶと、AIが現状・目線・行動を平易な言葉で解説。「押し目買いを待つ」など、次の一手が分かります。</p>
+    </div>
+    <div class="feat">
+      <div class="feat-ic">05 / NUMBERS</div>
+      <h4>具体的な数値指針</h4>
+      <p>移動平均・ATR・ボリンジャーバンドの実数値から、押し目の目安価格・損切り幅(pips)・サポレジ水準を提示します。</p>
+    </div>
+    <div class="feat principle">
+      <div class="feat-ic" style="background:var(--surface2);border-color:var(--line2);color:var(--ink-soft)">— PRINCIPLE</div>
+      <h4>予測はしない</h4>
+      <p>このツールは未来を当てません。あくまで「現状の整理」と「水準の目安」を示すのみ。最後の引き金を引くのは、いつもあなた自身です。</p>
+    </div>
+  </div>
+</section>
+
+<!-- 03 -->
+<section id="env">
+  <div class="sec-head">
+    <span class="sec-num">03</span>
+    <h2>動作環境と準備するもの<span class="sub">REQUIREMENTS</span></h2>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <tr><th style="width:34%">項目</th><th>内容</th></tr>
+      <tr><td><strong>取引プラットフォーム</strong></td><td>MetaTrader 5（MT5）<br><span class="soft" style="font-size:12.5px">※ MT4には対応していません</span></td></tr>
+      <tr><td><strong>種別</strong></td><td>EA（エキスパートアドバイザ）／<strong>分析専用・自動売買は行いません</strong></td></tr>
+      <tr><td><strong>必要なもの</strong></td><td>Anthropic（クロード）のAPIキー<br><span class="soft" style="font-size:12.5px">※ AI解説機能の利用に必要。取得方法は第6章を参照</span></td></tr>
+      <tr><td><strong>インターネット接続</strong></td><td>必須（AI解説のためAnthropicサーバーへ通信します）</td></tr>
+    </table>
+  </div>
+  <div class="box note">
+    <div class="box-t">◆ AIを使わない場合</div>
+    <p>APIキーを設定しなくても、「環境チェック」によるペアのランキング表示（買い目／売り目／待ちの判定）は通常どおり動作します。AIによる詳しい言葉の解説のみ、APIキーが必要です。</p>
+  </div>
+</section>
+
+<!-- 04 -->
+<section id="install">
+  <div class="sec-head">
+    <span class="sec-num">04</span>
+    <h2>導入手順<span class="sub">SETUP</span></h2>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-n">1</div>
+      <div class="step-body">
+        <h4>ファイルを配置する</h4>
+        <p>受け取った <code>MarketEnvNavi.mq5</code> を、MT5の <code>MQL5 / Experts</code> フォルダに入れます。MT5の「データフォルダを開く」から辿れます。配置後、MetaEditorでコンパイル（F7）してください。</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">2</div>
+      <div class="step-body">
+        <h4>チャートに適用する</h4>
+        <p>ナビゲーターの「エキスパートアドバイザ」から <strong>MarketEnvNavi</strong> を、分析したいチャートにドラッグします。チャート左上にボタンとパネルが表示されれば成功です。</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">3</div>
+      <div class="step-body">
+        <h4>アルゴリズム取引をオンにする</h4>
+        <p>MT5ツールバーの「アルゴリズム取引」ボタンをオンにします。これがオフだと、AIへの通信が行われません。<br><span class="soft" style="font-size:12.5px">※ 本EAは売買注文を出しません。通信の許可のためにオンにします。</span></p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">4</div>
+      <div class="step-body">
+        <h4>通信先（URL）を許可する</h4>
+        <p>メニューの <code>ツール → オプション → エキスパートアドバイザ</code> を開き、「WebRequestを許可するURLリスト」に次のURLを追加します。</p>
+        <div class="codeblock"><span class="cb-label">URL</span>https://api.anthropic.com</div>
+        <p class="soft" style="font-size:12.5px;margin-bottom:0">これを忘れると、AI解説時に通信エラーになります。最も多いつまずきポイントです。</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">5</div>
+      <div class="step-body">
+        <h4>APIキーを設定する</h4>
+        <p>チャート上のEAをダブルクリック（またはチャート右クリック→「エキスパートリスト」）で設定画面を開き、「パラメーターの入力」タブの <code>InpApiKey</code> に、ご自身のAnthropic APIキーを貼り付けてOKを押します。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 05 -->
+<section id="usage">
+  <div class="sec-head">
+    <span class="sec-num">05</span>
+    <h2>使い方<span class="sub">HOW TO USE</span></h2>
+  </div>
+
+  <h3>STEP 1 ｜ 環境をスキャンする</h3>
+  <p>パネル上部の <strong>「環境チェック」</strong> ボタンを押すと、その瞬間に主要ペアを一括で評価し、「条件が揃っている順」にランキング表示します。チャートを開いて「入りたい」と感じたら、まずこのボタン。今この瞬間、本当に狙える場所があるのかを確認します。</p>
+
+  <h3>STEP 2 ｜ 気になるペアを選ぶ</h3>
+  <p>ランキングを見て気になったら、<strong>「1位解説」「2位解説」「3位解説」</strong> のボタンを押します。そのペアだけをAIに送り、数秒で詳しい解説が返ります。</p>
+  <p class="soft" style="font-size:13.5px">※ 多くの場合、注目すべきは上位の1〜2ペアです。下位が「待ち」ばかりなら、それは「今日は無理に動くな」というサインです。</p>
+
+  <h3>STEP 3 ｜ 現状・目線・行動を読む</h3>
+  <p>AI解説は3つのタブで切り替えられます。特に <strong>★行動</strong> タブが、具体的な次の一手です。</p>
+
+  <div class="table-wrap">
+    <table>
+      <tr><th style="width:24%">タブ</th><th>内容</th></tr>
+      <tr><td><strong>現状</strong></td><td>今の足の向き・位置・移動平均との関係など、客観的な状況の整理。</td></tr>
+      <tr><td><strong>目線</strong></td><td>データが示すメインの方向と、その見立てが「崩れる条件」を具体的な価格で提示。</td></tr>
+      <tr><td><strong>★行動</strong></td><td>今すぐ／待ち／見送りの判断と、待つ場合の目標価格・損切り幅(pips)まで。</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- 06 -->
+<section id="apikey">
+  <div class="sec-head">
+    <span class="sec-num">06</span>
+    <h2>APIキーの取得とコスト<span class="sub">API KEY &amp; COST</span></h2>
+  </div>
+  <h3>キーの取得方法</h3>
+  <p><a href="https://console.anthropic.com">console.anthropic.com</a> にアクセスしてアカウントを作成し、「API Keys」のページで新しいキーを発行します。<code>sk-ant-</code> で始まる文字列がキーです。発行時に一度だけ全体が表示されるため、その場でコピーして安全な場所に保管してください。</p>
+  <div class="box danger">
+    <div class="box-t">⚠ APIキーは絶対に他人に見せないでください</div>
+    <p>APIキーはパスワードと同等の機密情報です。SNSやスクリーンショットへの写り込み、第三者への共有は厳禁です。万一漏えいした場合は、Anthropicのコンソールから即座に無効化（失効）できます。</p>
+  </div>
+  <h3>利用料金のめやす</h3>
+  <p>AI解説は、ボタンを押して1ペアを解説するたびに、Anthropicへ少額の利用料が発生します。1回あたりのおおよその目安は次のとおりです。</p>
+  <div class="cost-grid">
+    <div class="cost-card">
+      <div class="cost-model">Haiku 4.5</div>
+      <div class="cost-price">0.1<span>円/回</span></div>
+      <div class="cost-desc">最も安く高速。<br>簡潔な解説。</div>
+    </div>
+    <div class="cost-card recommended">
+      <div class="cost-rec">初期設定・推奨</div>
+      <div class="cost-model">Sonnet 4.6</div>
+      <div class="cost-price">0.5<span>円/回</span></div>
+      <div class="cost-desc">具体的な数値解説の<br>バランスが良い。</div>
+    </div>
+    <div class="cost-card">
+      <div class="cost-model">Opus 4.7</div>
+      <div class="cost-price">0.9<span>円/回</span></div>
+      <div class="cost-desc">最も精緻。<br>Sonnetとの差は小さめ。</div>
+    </div>
+  </div>
+  <p class="soft" style="font-size:12.5px">※ 金額はトークン量・為替・Anthropicの料金改定により変動します。あくまで2026年時点の目安です。1日に数回の利用であれば、月額でも数十円〜数百円程度に収まる想定です。</p>
+</section>
+
+<!-- 07 -->
+<section id="screen">
+  <div class="sec-head">
+    <span class="sec-num">07</span>
+    <h2>画面の見方<span class="sub">READING THE PANEL</span></h2>
+  </div>
+
+  <h3>ランキングパネル</h3>
+  <div class="mock">
+    <div class="mock-titlebar">
+      <div class="mock-dot r"></div>
+      <div class="mock-dot y"></div>
+      <div class="mock-dot g"></div>
+      <span class="mock-title">環境ナビ パネル</span>
+    </div>
+    <div class="mock-body"><span class="mock-head">■ 環境ナビ  2026.05.30 09:26  PERIOD_H1基準</span>
+1. <span class="mock-buy">USDCAD  [買い目] 50  4/4足上</span>
+2. <span class="mock-sell">USDCHF  [売り目] 30  3/4足下・安値警戒・CHF優位</span>
+3. <span class="mock-wait">XAUUSD  [待ち]   16  条件不足</span>
+<span class="mock-foot">── 予測ではありません。最終判断はご自身で。</span></div>
+  </div>
+  <p>各行は <strong>順位・通貨ペア・判定・スコア・根拠</strong> の順です。</p>
+  <div class="table-wrap">
+    <table>
+      <tr><th style="width:26%">表示</th><th>意味</th></tr>
+      <tr><td><span class="tag buy">買い目</span></td><td>複数時間足が上向きに揃い、買い方向の条件が出ている状態。</td></tr>
+      <tr><td><span class="tag sell">売り目</span></td><td>複数時間足が下向きに揃い、売り方向の条件が出ている状態。</td></tr>
+      <tr><td><span class="tag wait">待ち</span></td><td>方向感がない／値動きが荒い／時間足がバラバラなど、見送りが無難な状態。</td></tr>
+      <tr><td>スコア（数値）</td><td>「条件が揃っている度合い」。<strong>買い推奨度ではありません。</strong>飛びつき・荒れ・逆行があると減点されます。</td></tr>
+    </table>
+  </div>
+  <div class="box note">
+    <div class="box-t">◆「今日は全体的に見送りが無難」と出たら</div>
+    <p>最上位のペアすら条件を満たしていない、ということです。「何もしない」も立派な判断。無理に動かず、相場が動意づくのを待ちましょう。</p>
+  </div>
+
+  <h3>AI解説パネル（★行動タブの例）</h3>
+  <div class="mock">
+    <div class="mock-titlebar">
+      <div class="mock-dot r"></div>
+      <div class="mock-dot y"></div>
+      <div class="mock-dot g"></div>
+      <span class="mock-title">AI解説 — ★行動タブ</span>
+    </div>
+    <div class="mock-body"><span class="mock-head">◆ USDCHF のAI解説</span>
+<span class="mock-em">・行動：待ち</span>
+  → 現在地はBB下限(0.77988)まで約10pipsと安値圏に近く、
+    今すぐ飛び乗るのはリスクが高い。
+    EMA20(0.78230)付近への戻りを待って売り検討が基本。
+    損切り目安はATR×1.5＝約19pips。
+<span class="mock-foot">※予測ではありません。最終判断はご自身で。</span></div>
+  </div>
+  <p class="soft" style="font-size:13.5px">このように、ただ「待ち」と言うだけでなく、<strong>どの価格まで引きつけ、どこで損切りを置くか</strong>という具体的な水準を、その時々のデータから算出して示します。</p>
+</section>
+
+<!-- 08 -->
+<section id="settings">
+  <div class="sec-head">
+    <span class="sec-num">08</span>
+    <h2>主な設定項目<span class="sub">PARAMETERS</span></h2>
+  </div>
+  <p>初期設定のままでも使えますが、ご自身の相場観に合わせて調整できます。</p>
+
+  <h3>基本</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th style="width:38%">項目</th><th>内容</th></tr>
+      <tr><td><code>InpTimeframe</code></td><td>判定の基準となる時間足（初期：H1＝1時間足）。デイトレ向けの設定です。</td></tr>
+      <tr><td><code>InpLookback</code></td><td>変化率・位置を測る本数（初期：24＝約1日分）。</td></tr>
+      <tr><td><code>InpTopN</code></td><td>ランキングに表示するペア数（初期：6）。</td></tr>
+      <tr><td><code>InpFontSize</code> / <code>InpPanelW</code></td><td>文字サイズ・パネル幅。表示が大きい／小さいと感じたら調整します。</td></tr>
+    </table>
+  </div>
+
+  <h3>AI</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th style="width:38%">項目</th><th>内容</th></tr>
+      <tr><td><code>InpApiKey</code></td><td>Anthropic APIキー。<strong>他者に見せないこと。</strong></td></tr>
+      <tr><td><code>InpModelSelect</code></td><td>AIモデルの選択（Haiku／Sonnet／Opus）。初期はSonnet。</td></tr>
+    </table>
+  </div>
+
+  <h3>判定のしきい値（上級者向け）</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th style="width:38%">項目</th><th>内容</th></tr>
+      <tr><td><code>InpPosHigh</code> / <code>InpPosLow</code></td><td>「高値圏／安値圏」と見なす位置（初期：72／28）。飛びつき判定の感度。</td></tr>
+      <tr><td><code>InpVolHot</code></td><td>「荒れ」と見なすボラ比（初期：1.35）。</td></tr>
+      <tr><td><code>InpWaitBelow</code></td><td>このスコア未満は「待ち」とする境目（初期：25）。慎重さの調整。</td></tr>
+      <tr><td><code>InpEmaFast/Mid/Slow</code>・<code>InpAtrPeriod</code>・<code>InpBbPeriod</code></td><td>AI解説で使う移動平均・ATR・ボリンジャーバンドの期間。</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- 09 -->
+<section id="faq">
+  <div class="sec-head">
+    <span class="sec-num">09</span>
+    <h2>よくある質問<span class="sub">FAQ &amp; TROUBLESHOOTING</span></h2>
+  </div>
+
+  <details>
+    <summary><span class="q-badge">Q</span>AI解説で「通信エラー」と出ます<span class="sum-arrow">▾</span></summary>
+    <div class="faq-body">ほとんどの場合、第4章のURL許可が原因です。<code>ツール → オプション → エキスパートアドバイザ</code> の「WebRequestを許可するURLリスト」に <code>https://api.anthropic.com</code> が追加されているか、「アルゴリズム取引」がオンになっているかをご確認ください。</div>
+  </details>
+  <details>
+    <summary><span class="q-badge">Q</span>「APIエラー（HTTP 401）」と出ます<span class="sum-arrow">▾</span></summary>
+    <div class="faq-body">APIキーが正しくないか、入力ミスの可能性が高いです。<code>sk-ant-</code> から始まるキー全体が、余分な空白なく貼り付けられているかご確認ください。また、Anthropicコンソールで残高（クレジット）があるかもご確認ください。</div>
+  </details>
+  <details>
+    <summary><span class="q-badge">Q</span>数値が「-」や「取得中」ばかりになります<span class="sum-arrow">▾</span></summary>
+    <div class="faq-body">EAを入れた直後は、各ペアの過去データがまだ読み込まれていないことがあります。1〜2分ほど待ってから、もう一度ボタンを押してください。普段表示していない通貨ペアほど、初回の読み込みに時間がかかります。</div>
+  </details>
+  <details>
+    <summary><span class="q-badge">Q</span>いつ押しても全部「待ち」になります<span class="sum-arrow">▾</span></summary>
+    <div class="faq-body">相場が方向感のない時間帯（例：早朝など）であれば、それが正しい判定です。一方、明らかにトレンドが出ている相場でも全て待ちになる場合は、<code>InpWaitBelow</code> の値を少し下げると、判定が出やすくなります。</div>
+  </details>
+  <details>
+    <summary><span class="q-badge">Q</span>ゴールドが「シンボル未検出」になります<span class="sum-arrow">▾</span></summary>
+    <div class="faq-body">ブローカーによってゴールドの銘柄名が異なります（例：<code>GOLD#</code>、<code>XAUUSD.m</code> など）。本ツールは主要な別名を自動で探しますが、見つからない場合は <code>InpSuffix</code> に口座の接尾辞（例：<code>m</code> や <code>#</code>）を指定してみてください。</div>
+  </details>
+  <details>
+    <summary><span class="q-badge">Q</span>AIの解説と、表示されている数値が食い違うことがあります<span class="sum-arrow">▾</span></summary>
+    <div class="faq-body">AIは与えられた数値をもとに文章を組み立てるため、ごくまれに数値の表現にばらつきが出ることがあります。最終的な判断の際は、必ずご自身でチャート上の価格をご確認ください。本ツールはあくまで「考えるための材料」を提供するものです。</div>
+  </details>
+  <details>
+    <summary><span class="q-badge">Q</span>自動で売買してくれますか？<span class="sum-arrow">▾</span></summary>
+    <div class="faq-body">いいえ。本ツールは<strong>分析専用</strong>であり、売買注文は一切出しません。エントリー・決済の操作は、すべてご自身で行っていただく設計です。</div>
+  </details>
+</section>
+
+<!-- 10 -->
+<section id="disclaimer">
+  <div class="sec-head">
+    <span class="sec-num">10</span>
+    <h2>注意事項・免責<span class="sub">DISCLAIMER</span></h2>
+  </div>
+  <div class="box danger">
+    <div class="box-t">⚠ ご利用前に必ずお読みください</div>
+    <p>本ツールは相場環境を整理し、判断の材料を提供するものであり、<strong>将来の値動きや利益を保証・予測するものではありません。</strong></p>
+    <p>表示される判定・スコア・AIの解説は、あくまで一つの参考情報です。実際の取引における最終的な意思決定および、その結果生じるいかなる損益についても、すべてご利用者ご自身の責任となります。</p>
+    <p>外国為替証拠金取引（FX）には、為替変動・金利変動等により元本を超える損失が生じるおそれがあります。リスクを十分にご理解のうえ、余裕資金の範囲でお取引ください。</p>
+    <p style="margin-bottom:0">本ツールの利用により生じた損害について、開発者は一切の責任を負いません。あらかじめご了承ください。</p>
+  </div>
+  <div class="box warn">
+    <div class="box-t">◆ AI解説についての補足</div>
+    <p>AI解説機能は、Anthropic社のClaude APIを利用しています。AIの出力は完全ではなく、表現の揺れや解釈の幅が生じる場合があります。数値や水準は必ずチャートでご確認のうえ、参考としてご活用ください。</p>
+  </div>
+</section>
+
+</div><!-- /wrap -->
+
+<footer>
+  <div class="footer-brand">環境<span>ナビ</span> ― MarketEnvNavi</div>
+  <p>Version 4.20 ／ for MetaTrader 5（分析専用）</p>
+  <p style="margin-top:6px">developed by kinakomochi</p>
+  <div class="footer-meta">
+    <p>AI解説機能は Anthropic Claude API を利用しています。</p>
+    <p style="margin-top:4px">本書の内容は予告なく変更される場合があります。</p>
+  </div>
+</footer>
+
+</body>
+</html>

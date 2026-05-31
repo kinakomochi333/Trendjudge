@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MarketEnvNavi — User Manual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0c0e14;--bg2:#11141d;--panel:#161a26;--panel2:#1c212f;
+    --line:#2a3142;--ink:#dfe4ee;--ink-soft:#9aa3b5;--ink-faint:#6b7385;
+    --gold:#d8b25c;--gold-bright:#f0d290;--gold-deep:#a8842f;
+    --buy:#5fd07a;--sell:#e8736a;--wait:#9aa3b5;--warn:#e6b455;
+    --radius:14px;--mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:
+      radial-gradient(1200px 600px at 80% -10%,rgba(216,178,92,0.07),transparent 60%),
+      radial-gradient(900px 500px at -10% 10%,rgba(95,128,208,0.05),transparent 55%),
+      var(--bg);
+    color:var(--ink);font-family:'Inter',sans-serif;
+    line-height:1.85;font-size:15.5px;-webkit-font-smoothing:antialiased;padding-bottom:80px;
+  }
+  .wrap{max-width:880px;margin:0 auto;padding:0 24px}
+  header.hero{position:relative;padding:90px 24px 70px;text-align:center;border-bottom:1px solid var(--line);overflow:hidden}
+  header.hero::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(135deg,transparent 0 22px,rgba(216,178,92,0.025) 22px 23px);pointer-events:none}
+  .eyebrow{font-family:var(--mono);letter-spacing:.45em;text-transform:uppercase;font-size:11px;color:var(--gold);margin-bottom:22px}
+  header.hero h1{font-family:'Inter',sans-serif;font-weight:900;font-size:clamp(34px,6vw,56px);line-height:1.1;letter-spacing:-.02em;margin-bottom:10px}
+  header.hero h1 .en{display:block;font-family:var(--mono);font-weight:700;font-size:clamp(12px,2vw,15px);letter-spacing:.25em;color:var(--gold-bright);margin-top:18px}
+  .tagline{color:var(--ink-soft);font-size:16px;max-width:520px;margin:24px auto 0}
+  .ver-badge{display:inline-block;margin-top:30px;padding:7px 18px;border:1px solid var(--gold-deep);border-radius:999px;font-family:var(--mono);font-size:12px;color:var(--gold-bright);letter-spacing:.1em}
+  section{padding:54px 0 8px}
+  .sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:26px}
+  .sec-num{font-family:var(--mono);font-size:13px;color:var(--gold-deep);border:1px solid var(--gold-deep);border-radius:6px;padding:3px 9px;flex:none}
+  h2{font-family:'Inter',sans-serif;font-weight:700;font-size:25px;letter-spacing:-.01em;color:var(--ink)}
+  h2 .sub{display:block;font-family:var(--mono);font-size:11px;color:var(--ink-faint);letter-spacing:.2em;margin-top:6px;font-weight:400}
+  h3{font-family:'Inter',sans-serif;font-weight:700;font-size:17px;margin:30px 0 12px;color:var(--gold-bright);display:flex;align-items:center;gap:10px}
+  h3::before{content:"";width:7px;height:7px;background:var(--gold);transform:rotate(45deg);flex:none}
+  p{margin-bottom:14px;color:var(--ink)}
+  p.soft{color:var(--ink-soft)}
+  strong{color:var(--gold-bright);font-weight:700}
+  a{color:var(--gold-bright);text-decoration:none;border-bottom:1px dotted var(--gold-deep)}
+  .lead{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:var(--radius);padding:28px 30px;font-size:16.5px;line-height:1.95}
+  .features{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px}
+  .feat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px 22px 20px;transition:border-color .25s,transform .25s}
+  .feat:hover{border-color:var(--gold-deep);transform:translateY(-3px)}
+  .feat .ic{font-family:var(--mono);font-size:12px;color:var(--gold);letter-spacing:.15em;margin-bottom:10px}
+  .feat h4{font-size:16px;font-weight:700;margin-bottom:8px;color:var(--ink)}
+  .feat p{font-size:13.5px;color:var(--ink-soft);margin:0}
+  .step{display:flex;gap:20px;padding:24px 0;border-bottom:1px solid var(--line)}
+  .step:last-child{border-bottom:none}
+  .step-n{flex:none;width:42px;height:42px;border-radius:50%;border:1.5px solid var(--gold);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:17px}
+  .step-body{flex:1}
+  .step-body h4{font-size:16.5px;font-weight:700;margin-bottom:6px}
+  .step-body p{font-size:14px;color:var(--ink-soft);margin-bottom:0}
+  code{font-family:var(--mono);font-size:13px;background:var(--panel2);border:1px solid var(--line);padding:2px 7px;border-radius:5px;color:var(--gold-bright)}
+  .codeblock{font-family:var(--mono);font-size:12.5px;line-height:1.7;background:#0a0c12;border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:14px 0;color:var(--ink-soft);overflow-x:auto;white-space:pre}
+  .box{border-radius:12px;padding:18px 22px;margin:18px 0;border:1px solid var(--line)}
+  .box .box-t{font-weight:700;font-size:14px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+  .box p{font-size:13.5px;margin-bottom:6px}
+  .box.note{background:rgba(95,128,208,0.06);border-color:#33405e}
+  .box.note .box-t{color:#8fb0ff}
+  .box.warn{background:rgba(230,180,85,0.07);border-color:#5c4a25}
+  .box.warn .box-t{color:var(--warn)}
+  .box.danger{background:rgba(232,115,106,0.07);border-color:#5e3330}
+  .box.danger .box-t{color:var(--sell)}
+  .mock{background:#10131c;border:1px solid var(--line);border-radius:12px;padding:18px 20px;font-family:var(--mono);font-size:13px;line-height:1.9;margin:16px 0}
+  .mock .row-head{color:var(--gold-bright)}
+  .mock .buy{color:var(--buy)}
+  .mock .sell{color:var(--sell)}
+  .mock .wait{color:var(--wait)}
+  .mock .foot{color:var(--ink-faint);font-size:11.5px;margin-top:6px}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13.5px}
+  th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--gold);font-weight:700;font-size:12px;letter-spacing:.05em;border-bottom:1px solid var(--gold-deep)}
+  td code{font-size:12px}
+  tr:hover td{background:rgba(216,178,92,0.03)}
+  .tag{font-family:var(--mono);font-size:11px;padding:2px 8px;border-radius:5px}
+  .tag.buy{background:rgba(95,208,122,0.13);color:var(--buy)}
+  .tag.sell{background:rgba(232,115,106,0.13);color:var(--sell)}
+  .tag.wait{background:rgba(154,163,181,0.13);color:var(--wait)}
+  details{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin-bottom:10px;overflow:hidden}
+  details[open]{border-color:var(--gold-deep)}
+  summary{padding:16px 20px;cursor:pointer;font-weight:700;font-size:14.5px;list-style:none;display:flex;align-items:center;gap:10px}
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"Q";font-family:var(--mono);color:var(--gold);font-size:13px;border:1px solid var(--gold-deep);border-radius:4px;padding:1px 7px;flex:none}
+  details[open] summary{border-bottom:1px solid var(--line)}
+  .faq-body{padding:14px 20px 18px;color:var(--ink-soft);font-size:13.5px}
+  .faq-body code{font-size:12px}
+  footer{margin-top:70px;padding:40px 24px;text-align:center;border-top:1px solid var(--line);color:var(--ink-faint);font-size:13px}
+  footer .brand{font-family:'Inter',sans-serif;font-size:18px;color:var(--gold-bright);margin-bottom:8px;letter-spacing:.05em;font-weight:700}
+  @media(max-width:640px){.features{grid-template-columns:1fr}body{font-size:15px}.step{gap:14px}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="eyebrow">For MetaTrader 5 — Analysis Tool</div>
+  <h1>MarketEnvNavi
+    <span class="en">UNBIASED MARKET SCANNER WITH AI ANALYSIS</span>
+  </h1>
+  <p class="tagline">Scan. Rank. Ask AI. Act with clarity — not impulse.</p>
+  <div class="ver-badge">VERSION 5.00 ／ User Manual</div>
+</header>
+
+<div class="wrap">
+
+  <!-- 1 -->
+  <section id="about">
+    <div class="sec-head"><span class="sec-num">01</span><h2>About This Tool<span class="sub">OVERVIEW</span></h2></div>
+    <div class="lead">
+      <p style="margin-bottom:14px"><strong>MarketEnvNavi is not a signal tool. It does not predict prices.</strong></p>
+      <p style="margin-bottom:14px">Every time you open a chart, there's a pull to do something — to enter, to act. This tool puts an objective layer between that impulse and your execution. It scans 12 major pairs, ranks them by how well conditions align, and lets you ask Claude AI for a plain-English breakdown of what's actually happening.</p>
+      <p style="margin-bottom:0">When the setup isn't there, <strong>it says so clearly.</strong> "Wait" and "Skip" are valid outputs — not failures. The goal is to help you trade less, but better.</p>
+    </div>
+    <div class="box note" style="margin-top:22px">
+      <div class="box-t">◆ Why "unbiased"?</div>
+      <p>When you ask a person for advice, they read your mood and tell you what you want to hear. This tool doesn't. It evaluates the same data regardless of what you're hoping for — and returns the same answer whether you're long, short, or flat. That's the point.</p>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section id="features">
+    <div class="sec-head"><span class="sec-num">02</span><h2>Key Features<span class="sub">FEATURES</span></h2></div>
+    <div class="features">
+      <div class="feat">
+        <div class="ic">01 / RAW DATA</div>
+        <h4>Signal from raw data only</h4>
+        <p>Ranking uses price change rate, multi-timeframe direction, range position, and realized volatility — not lagging indicators.</p>
+      </div>
+      <div class="feat">
+        <div class="ic">02 / NO FLATTERY</div>
+        <h4>Stops you from chasing</h4>
+        <p>Buying at a high zone or selling at a low zone reduces the score. If conditions don't align, it says "Wait" or "Skip" — clearly.</p>
+      </div>
+      <div class="feat">
+        <div class="ic">03 / RANKING</div>
+        <h4>See all options at once</h4>
+        <p>All 12 pairs are scanned at once and ranked by setup quality. Best conditions rise to the top. "Nothing is worth it today" is a valid result.</p>
+      </div>
+      <div class="feat">
+        <div class="ic">04 / AI INSIGHT</div>
+        <h4>Plain-English analysis</h4>
+        <p>Press 1st / 2nd / 3rd to get Claude AI's breakdown: current state, directional bias with invalidation level, and a concrete action guide.</p>
+      </div>
+      <div class="feat">
+        <div class="ic">05 / NUMBERS</div>
+        <h4>Concrete levels, not vague guidance</h4>
+        <p>EMA 20/50/200, ATR, and Bollinger Bands are calculated from live data and included in the AI analysis — with specific prices and pip values.</p>
+      </div>
+      <div class="feat" style="border-color:var(--gold-deep)">
+        <div class="ic" style="color:var(--gold-bright)">— PRINCIPLE</div>
+        <h4>No predictions</h4>
+        <p>This tool doesn't know what will happen next. It organizes what is happening now and gives you a structured view. The final call is always yours.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section id="env">
+    <div class="sec-head"><span class="sec-num">03</span><h2>Requirements<span class="sub">REQUIREMENTS</span></h2></div>
+    <table>
+      <tr><th style="width:34%">Item</th><th>Details</th></tr>
+      <tr><td>Platform</td><td>MetaTrader 5 (MT5)<br><span style="font-size:12.5px;color:var(--ink-soft)">※ MT4 is not supported</span></td></tr>
+      <tr><td>Type</td><td>EA (Expert Advisor) — <strong>analysis only, no trades placed</strong></td></tr>
+      <tr><td>Required</td><td>Anthropic API key<br><span style="font-size:12.5px;color:var(--ink-soft)">※ Needed for AI analysis. See Chapter 6 for setup.</span></td></tr>
+      <tr><td>Internet</td><td>Required (AI analysis communicates with api.anthropic.com)</td></tr>
+    </table>
+    <div class="box note">
+      <div class="box-t">◆ Using without an API key</div>
+      <p>The scan and ranking features (Scan Markets button) work without an API key. Only the AI analysis (1st / 2nd / 3rd buttons) requires one.</p>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section id="install">
+    <div class="sec-head"><span class="sec-num">04</span><h2>Setup<span class="sub">INSTALLATION</span></h2></div>
+
+    <div class="step">
+      <div class="step-n">1</div>
+      <div class="step-body">
+        <h4>Place the file</h4>
+        <p>Copy <code>MarketEnvNavi_EN.mq5</code> into MT5's <code>MQL5 / Experts</code> folder. Open MetaEditor and press F7 to compile. Confirm "0 errors".</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">2</div>
+      <div class="step-body">
+        <h4>Attach to chart</h4>
+        <p>Find <strong>MarketEnvNavi_EN</strong> in the Navigator under Expert Advisors and drag it onto any chart. The button panel will appear in the upper-left corner.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">3</div>
+      <div class="step-body">
+        <h4>Enable Algo Trading</h4>
+        <p>Click the <strong>Algo Trading</strong> button in the MT5 toolbar (it must be green / ON). Without this, the AI communication will not work.<br><span style="font-size:12.5px;color:var(--ink-soft)">※ This EA does not place any orders. Algo Trading is required only for WebRequest access.</span></p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">4</div>
+      <div class="step-body">
+        <h4>Allow WebRequest</h4>
+        <p>Go to <code>Tools → Options → Expert Advisors</code> and add the following URL to the WebRequest allowed list:</p>
+        <div class="codeblock">https://api.anthropic.com</div>
+        <p class="soft" style="font-size:12.5px;margin-bottom:0">This is the most common setup mistake. If AI analysis returns a connection error, check this first.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">5</div>
+      <div class="step-body">
+        <h4>Enter your API key</h4>
+        <p>Double-click the EA on the chart (or right-click → Expert List) to open settings. In the <strong>Inputs</strong> tab, find <code>InpApiKey</code> and paste your Anthropic API key. Click OK.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section id="usage">
+    <div class="sec-head"><span class="sec-num">05</span><h2>How to Use<span class="sub">HOW TO USE</span></h2></div>
+
+    <h3>STEP 1 ｜ Scan the market</h3>
+    <p>Press <strong>[Scan Markets]</strong>. The tool evaluates all 12 pairs using the current moment's data and displays a ranked list — best conditions at the top. If you feel the urge to enter a trade, press this button first and see where your pair actually ranks.</p>
+
+    <h3>STEP 2 ｜ Choose a pair</h3>
+    <p>If the top pairs look interesting, press <strong>[1st]</strong>, <strong>[2nd]</strong>, or <strong>[3rd]</strong>. The tool sends that pair's data to Claude AI and returns a breakdown within a few seconds.<br><span style="font-size:13px;color:var(--ink-soft)">※ In most cases, only the top 1–2 pairs are worth examining. If everything is ranked "Wait", that is information too — today may not be the day.</span></p>
+
+    <h3>STEP 3 ｜ Read the analysis</h3>
+    <p>The AI response is split into three tabs. The <strong>★ Action</strong> tab is the most actionable.</p>
+    <table>
+      <tr><th style="width:24%">Tab</th><th>Content</th></tr>
+      <tr><td><strong>Status</strong></td><td>Current trend direction, range position, EMA alignment, and volatility state.</td></tr>
+      <tr><td><strong>Direction</strong></td><td>One clear main bias (not both-sided) and the specific price level that would invalidate it.</td></tr>
+      <tr><td><strong style="color:var(--gold-bright)">★ Action</strong></td><td>Enter now / Wait / Skip — with the price to wait for, stop-loss guide in pips (ATR-based), and reasoning.</td></tr>
+    </table>
+    <div class="box note">
+      <div class="box-t">◆ About the ≡ toggle button</div>
+      <p>Press the small <code>≡</code> button in the top-left corner to hide all panels and buttons. Press again to restore. Use this to see the chart without obstruction.</p>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section id="apikey">
+    <div class="sec-head"><span class="sec-num">06</span><h2>API Key &amp; Cost<span class="sub">API KEY &amp; COST</span></h2></div>
+    <h3>Getting your API key</h3>
+    <p>Visit <a href="https://console.anthropic.com">console.anthropic.com</a>, create an account, and go to <strong>API Keys</strong> to generate a new key. The key starts with <code>sk-ant-</code>. It is shown only once — copy it immediately and store it somewhere safe.</p>
+    <div class="box danger">
+      <div class="box-t">⚠ Never share your API key</div>
+      <p>Your API key is equivalent to a password. Do not post it in screenshots, share it with others, or paste it anywhere public. If compromised, revoke it immediately from the Anthropic console.</p>
+    </div>
+    <h3>Cost per use</h3>
+    <p>Each time you press 1st / 2nd / 3rd, one API call is made — billed to your Anthropic account. The tool does not collect any additional fees.</p>
+    <table>
+      <tr><th>Model</th><th>Estimated cost per call</th><th>Notes</th></tr>
+      <tr><td><code>Haiku 4.5</code><br><span style="font-size:12px;color:var(--ink-soft)">(default)</span></td><td>~$0.001</td><td>Fastest and cheapest. Concise output.</td></tr>
+      <tr><td><code>Sonnet 4.6</code></td><td>~$0.004</td><td>Recommended. Good balance of detail and cost.</td></tr>
+      <tr><td><code>Opus 4.7</code></td><td>~$0.007</td><td>Highest quality. Difference vs Sonnet is subtle.</td></tr>
+    </table>
+    <p class="soft" style="font-size:13px">※ Costs vary with token usage, exchange rates, and Anthropic's pricing. A few calls per session typically costs less than $0.01/day. Check your exact usage in the Anthropic console dashboard.</p>
+  </section>
+
+  <!-- 7 -->
+  <section id="screen">
+    <div class="sec-head"><span class="sec-num">07</span><h2>Reading the Panel<span class="sub">PANEL GUIDE</span></h2></div>
+
+    <h3>Ranking panel</h3>
+    <div class="mock">
+<span class="row-head">▪ MARKET NAVI  2026.05.31 13:58  [PERIOD_H1]</span>
+▲ 1. <span class="buy">USDCAD  [Buy setup]  50  4/4 TF Up</span>
+▼ 2. <span class="sell">USDCHF  [Sell setup] 30  3/4 TF Down·Low zone·CHF dominant</span>
+◦ 3. <span class="wait">XAUUSD  [Wait]       16  Insufficient setup</span>
+<span class="foot">◦ Not a forecast. Always apply your own judgment.</span>
+    </div>
+    <p>Each row: <strong>rank · pair · signal · score · basis</strong>.</p>
+    <table>
+      <tr><th style="width:26%">Label</th><th>Meaning</th></tr>
+      <tr><td><span class="tag buy">Buy setup</span></td><td>Multiple timeframes align upward and buy-side conditions are met.</td></tr>
+      <tr><td><span class="tag sell">Sell setup</span></td><td>Multiple timeframes align downward and sell-side conditions are met.</td></tr>
+      <tr><td><span class="tag wait">Wait</span></td><td>No direction / high volatility / timeframes mixed. Skip is the safe choice.</td></tr>
+      <tr><td>Score (number)</td><td>How well conditions align. <strong>Not a buy/sell recommendation.</strong> High-zone buys and low-zone sells are penalized.</td></tr>
+    </table>
+    <div class="box note">
+      <div class="box-t">◆ When "No valid setups found" appears</div>
+      <p>Even the top-ranked pair doesn't meet minimum conditions. "Doing nothing" is a valid decision. Wait for the market to develop before acting.</p>
+    </div>
+
+    <h3>AI Analysis panel (★ Action tab example)</h3>
+    <div class="mock">
+<span class="row-head">▪ AI ANALYSIS  USDCHF</span>
+<span style="color:#f0a35a">・Action: Wait</span>
+  → Price is ~10 pips from BB Lower (0.77988), in a low zone.
+    Jumping in now carries high reversal risk.
+    Wait for a pullback to EMA20 (0.78230) before considering sells.
+    SL guide: ATR×1.5 ≈ 19 pips.
+<span class="foot">※ Not a forecast. Always apply your own judgment.</span>
+    </div>
+    <p class="soft" style="font-size:13.5px">"Wait" doesn't mean do nothing forever. It means <strong>wait for a specific price</strong> — and the AI tells you which one, with concrete numbers from actual live data.</p>
+  </section>
+
+  <!-- 8 -->
+  <section id="settings">
+    <div class="sec-head"><span class="sec-num">08</span><h2>Settings<span class="sub">PARAMETERS</span></h2></div>
+    <p>Default values work out of the box. Adjust to suit your trading style.</p>
+    <h3>Display</h3>
+    <table>
+      <tr><th style="width:38%">Parameter</th><th>Details</th></tr>
+      <tr><td><code>InpTimeframe</code></td><td>Reference timeframe (default: H1). All calculations use this timeframe.</td></tr>
+      <tr><td><code>InpLookback</code></td><td>Bars to look back (default: 24 ≈ 1 day on H1).</td></tr>
+      <tr><td><code>InpTopN</code></td><td>Number of pairs shown in ranking (default: 6).</td></tr>
+      <tr><td><code>InpFontSize</code> / <code>InpPanelW</code></td><td>Font size and panel width. Adjust if display looks too large or small.</td></tr>
+      <tr><td><code>InpAiFontSize</code></td><td>Font size for the AI analysis panel (default: 10).</td></tr>
+      <tr><td><code>InpAiRowsPerPage</code></td><td>Lines per page in AI panel. If longer, use ▲Prev / ▼Next to page through.</td></tr>
+    </table>
+    <h3>AI</h3>
+    <table>
+      <tr><th style="width:38%">Parameter</th><th>Details</th></tr>
+      <tr><td><code>InpApiKey</code></td><td>Your Anthropic API key. <strong>Never share this.</strong></td></tr>
+      <tr><td><code>InpModelSelect</code></td><td>AI model: Haiku (fast/cheap) / Sonnet (recommended) / Opus (highest quality).</td></tr>
+    </table>
+    <h3>Thresholds (advanced)</h3>
+    <table>
+      <tr><th style="width:38%">Parameter</th><th>Details</th></tr>
+      <tr><td><code>InpPosHigh</code> / <code>InpPosLow</code></td><td>Range position % considered "high zone" or "low zone" (default: 72 / 28). Controls chase-prevention sensitivity.</td></tr>
+      <tr><td><code>InpVolHot</code></td><td>Volatility ratio considered "volatile" (default: 1.35).</td></tr>
+      <tr><td><code>InpWaitBelow</code></td><td>Score below this is labeled "Wait" (default: 25). Lower = more signals, higher = more conservative.</td></tr>
+    </table>
+  </section>
+
+  <!-- 9 -->
+  <section id="faq">
+    <div class="sec-head"><span class="sec-num">09</span><h2>Troubleshooting<span class="sub">FAQ</span></h2></div>
+
+    <details>
+      <summary>AI analysis shows "Connection Error"</summary>
+      <div class="faq-body">Almost always a WebRequest issue. Go to <code>Tools → Options → Expert Advisors</code> and confirm that <code>https://api.anthropic.com</code> is in the allowed URL list, and that Algo Trading is enabled (green) in the toolbar.</div>
+    </details>
+    <details>
+      <summary>"API Error (HTTP 401)" appears</summary>
+      <div class="faq-body">Your API key is invalid or entered incorrectly. Make sure the full key starting with <code>sk-ant-</code> is pasted without extra spaces. Also check your Anthropic console for remaining credit balance.</div>
+    </details>
+    <details>
+      <summary>Scores show 0 or "Loading data..." after attaching</summary>
+      <div class="faq-body">MT5 needs time to load historical data for pairs not currently on screen. Wait 1–2 minutes and press Scan Markets again. Pairs you don't normally chart will take longer to initialize.</div>
+    </details>
+    <details>
+      <summary>Everything shows "Wait" every time I scan</summary>
+      <div class="faq-body">During low-activity sessions (e.g. early morning), this is correct behavior. If it persists during active markets, try lowering <code>InpWaitBelow</code> slightly to make the threshold less strict.</div>
+    </details>
+    <details>
+      <summary>Gold (XAUUSD) shows "Symbol not found"</summary>
+      <div class="faq-body">Broker symbol names for Gold vary (e.g. <code>GOLD#</code>, <code>XAUUSD.m</code>). The tool auto-detects common variants, but if it fails, set <code>InpSuffix</code> to your broker's suffix (e.g. <code>m</code> or <code>#</code>).</div>
+    </details>
+    <details>
+      <summary>The AI numbers don't match what I see on the chart</summary>
+      <div class="faq-body">AI constructs its response from the data sent to it, and rarely may express values slightly differently. Always verify key levels on the chart before acting. This tool is a reference — not an instruction.</div>
+    </details>
+    <details>
+      <summary>Does this tool place trades automatically?</summary>
+      <div class="faq-body">No. This is a <strong>pure analysis tool</strong>. It never places, modifies, or closes orders. All execution is done manually by you.</div>
+    </details>
+  </section>
+
+  <!-- 10 -->
+  <section id="disclaimer">
+    <div class="sec-head"><span class="sec-num">10</span><h2>Disclaimer<span class="sub">DISCLAIMER</span></h2></div>
+    <div class="box danger">
+      <div class="box-t">⚠ Please read before use</div>
+      <p>This tool is for informational purposes only. It does not constitute financial advice and does not guarantee any specific trading results.</p>
+      <p>All signals, scores, and AI analysis are reference materials only. The final trading decision and all resulting gains or losses are entirely the responsibility of the user.</p>
+      <p>Foreign exchange trading involves substantial risk of loss and may not be suitable for all investors. Only trade with capital you can afford to lose.</p>
+      <p style="margin-bottom:0">The developer accepts no liability for any losses arising from use of this tool.</p>
+    </div>
+    <div class="box warn">
+      <div class="box-t">◆ Note on AI analysis</div>
+      <p>AI analysis is powered by Anthropic's Claude API. AI output is not perfect — wording and interpretation may vary between calls. Always verify numerical levels on your chart before making any trading decision.</p>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="brand">MarketEnvNavi — AI Market Scanner</div>
+  <p>Version 5.00 ／ for MetaTrader 5 (Analysis Only)</p>
+  <p style="margin-top:6px">developed by kinakomochi</p>
+  <p style="margin-top:14px;font-size:11.5px;color:#4a5161">AI analysis powered by Anthropic Claude API.<br>Content of this manual is subject to change without notice.</p>
+</footer>
+
+</body>
+</html>
